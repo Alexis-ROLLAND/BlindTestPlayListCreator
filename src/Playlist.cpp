@@ -9,7 +9,7 @@ void Playlist::dump() noexcept{
 }
 
 
-m3uPlaylist::m3uPlaylist(const std::string &Name,const std::string& path):Playlist(Name),path{path}{
+m3uPlaylist::m3uPlaylist(const std::string &_Name,const std::string& _path):Playlist(_Name),path{_path}{
     if (!(std::filesystem::exists(this->path) && std::filesystem::is_directory(this->path))){
         throw std::filesystem::filesystem_error("Destination Directory invalid",std::error_code{std::make_error_code(std::errc::no_such_file_or_directory)});;
     }

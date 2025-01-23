@@ -18,7 +18,7 @@ class Playlist{
         Playlist() = delete;
         virtual ~Playlist() = default;
 
-        Playlist(const std::string &Name):Name{Name}{};
+        Playlist(const std::string &_Name):Name{_Name}{};
 
         [[nodiscard]] std::string getName() noexcept {return this->Name;};
         
