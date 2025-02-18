@@ -45,5 +45,6 @@
         "typeinfo": "cpp",
         "text_encoding": "cpp",
         "filesystem": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }
