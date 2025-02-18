@@ -4,6 +4,11 @@ project(btPlaylistCreator)
 set(CMAKE_CXX_STANDARD 23)  # We're using C++23 standard :)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Désactiver les extensions spécifiques au compilateur
+set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+
+
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" REQUIRED)
+set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}" "-checks=-*,modernize-*")
 
 # Build type is debug by default
 # call cmake .. -DCMAKE_BUILD_TYPE=Release to change to relase
@@ -45,8 +50,8 @@ add_executable(btplcreator    src/btplcreator_main.cpp
                               )
 # Inclure les répertoires d'en-têtes
 target_include_directories(btplcreator PRIVATE include)
-
 target_link_libraries(btplcreator TagLib::tag)
+
 
 
 
