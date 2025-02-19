@@ -4,18 +4,22 @@
 #include <wx/stattext.h>
 
 MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600)) {
-    m_splitter = new wxSplitterWindow(this, wxID_ANY);
+    m_splitter = new wxSplitterWindow(this, wxID_ANY); /** Creates two subwindows */
 
     // Arborescence des fichiers à gauche
-    m_fileTree = new wxTreeCtrl(m_splitter, wxID_ANY);
+    m_fileTree = new wxTreeCtrl(m_splitter, wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
 
     // Panneau pour la liste à droite
-    wxPanel *rightPanel = new wxPanel(m_splitter, wxID_ANY);
-    wxBoxSizer *rightSizer = new wxBoxSizer(wxVERTICAL);
+    wxPanel *rightPanel =
+        new wxPanel(m_splitter, wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
+    wxBoxSizer *rightSizer =
+        new wxBoxSizer(wxVERTICAL); /** Creates a sizer (boxSizer), not a wxWindow specialization */
 
+    /*
     // Ajouter un label au-dessus de la liste
     wxStaticText *listLabel = new wxStaticText(rightPanel, wxID_ANY, "Fichiers Sélectionnés");
-    rightSizer->Add(listLabel, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);   // Marges et centrage horizontal
+    rightSizer->Add(listLabel, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);   // Adds text, Marges et centrage horizontal
+    */
 
     // Créer la liste des fichiers sélectionnés
     m_fileList = new wxListBox(rightPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
