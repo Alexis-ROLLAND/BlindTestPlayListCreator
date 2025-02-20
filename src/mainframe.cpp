@@ -1,25 +1,45 @@
 #include "mainframe.hpp"
 #include <wx/dir.h>
+#include <wx/display.h>
 #include <wx/filename.h>
 #include <wx/stattext.h>
 
-MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600)) {
+MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
+
+    // Obtenir la taille de l'écran principal
+    wxDisplay display{};
+    wxRect screenRect = display.GetClientArea();
+
+    // Calculer les 3/4 de la largeur et de la hauteur
+    int width = (screenRect.GetWidth() * 3) / 4;
+    int height = (screenRect.GetHeight() * 3) / 4;
+
+    // Définir la taille de la fenêtre
+    SetSize(width, height);
+
+    // Centrer la fenêtre sur l'écran
+    Centre();
+
     m_splitter = new wxSplitterWindow(this, wxID_ANY); /** Creates two subwindows */
 
-    // Arborescence des fichiers à gauche
-    m_fileTree = new wxTreeCtrl(m_splitter, wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
+    // Panneau gauche
+    wxPanel *leftPanel = new wxPanel(m_splitter, wxID_ANY);
+    wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
+    m_fileTree = new wxTreeCtrl(leftPanel, wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
+    leftSizer->Add(m_fileTree, 1, wxEXPAND | wxALL, 5);
+    m_grid = new wxGrid(leftPanel, wxID_ANY);
+    m_grid->CreateGrid(0, 2);
+    m_grid->SetColLabelValue(0, "Tag");
+    m_grid->SetColLabelValue(1, "Value");
+    leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);
+
+    leftPanel->SetSizer(leftSizer);
 
     // Panneau pour la liste à droite
     wxPanel *rightPanel =
         new wxPanel(m_splitter, wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
     wxBoxSizer *rightSizer =
         new wxBoxSizer(wxVERTICAL); /** Creates a sizer (boxSizer), not a wxWindow specialization */
-
-    /*
-    // Ajouter un label au-dessus de la liste
-    wxStaticText *listLabel = new wxStaticText(rightPanel, wxID_ANY, "Fichiers Sélectionnés");
-    rightSizer->Add(listLabel, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);   // Adds text, Marges et centrage horizontal
-    */
 
     // Créer la liste des fichiers sélectionnés
     m_playList = new wxListBox(rightPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
@@ -30,10 +50,12 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxD
     m_buttonUp = new wxButton(rightPanel, wxID_ANY, "Monter");
     m_buttonDown = new wxButton(rightPanel, wxID_ANY, "Descendre");
     m_buttonDelete = new wxButton(rightPanel, wxID_ANY, "Supprimer");
+    m_buttonGenerate = new wxButton(rightPanel, wxID_ANY, "Generer");
 
     buttonSizer->Add(m_buttonUp, 0, wxALL, 5);
     buttonSizer->Add(m_buttonDown, 0, wxALL, 5);
     buttonSizer->Add(m_buttonDelete, 0, wxALL, 5);
+    buttonSizer->Add(m_buttonGenerate, 0, wxALL, 5);
 
     rightSizer->Add(buttonSizer, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
 
@@ -42,8 +64,10 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxD
     rightPanel->Layout();   // Forcer la mise en page du panneau
 
     // Configurer le splitter pour diviser la fenêtre en deux parties
-    m_splitter->SplitVertically(m_fileTree, rightPanel);
-    m_splitter->SetMinimumPaneSize(200);
+    m_splitter->SplitVertically(leftPanel, rightPanel);
+    m_splitter->SetMinimumPaneSize(width / 4);
+    // Définir la position initiale du séparateur à 1/4 de la largeur
+    m_splitter->SetSashPosition(width / 4);
 
     // Obtenir le répertoire home
     wxString homeDir = wxGetHomeDir();
@@ -67,6 +91,7 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxD
     m_buttonUp->Bind(wxEVT_BUTTON, &MainFrame::OnMoveUp, this);
     m_buttonDown->Bind(wxEVT_BUTTON, &MainFrame::OnMoveDown, this);
     m_buttonDelete->Bind(wxEVT_BUTTON, &MainFrame::OnDelete, this);
+    m_buttonGenerate->Bind(wxEVT_BUTTON, &MainFrame::OnGenerate, this);
 }
 
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
@@ -105,6 +130,8 @@ void MainFrame::OnDelete(wxCommandEvent &event) {
             m_playList->SetSelection(m_playList->GetCount() - 1);
     }
 }
+
+void MainFrame::OnGenerate(wxCommandEvent &event) { UNUSED(event); }
 
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
 

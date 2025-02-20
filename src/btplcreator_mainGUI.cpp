@@ -6,7 +6,7 @@ class MyApp : public wxApp {
 };
 
 bool MyApp::OnInit() {
-    MainFrame *frame = new MainFrame("Explorateur de fichiers");
+    MainFrame *frame = new MainFrame("Blind Test PlayList Creator");
     frame->Show(true);
     return true;
 }
