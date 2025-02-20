@@ -1,7 +1,7 @@
 ---
 BasedOnStyle: LLVM
 IndentWidth: 4
-ColumnLimit: 120
+ColumnLimit: 180
 UseTab: Never
 AllowShortIfStatementsOnASingleLine: true
 AlignTrailingComments: true

@@ -20,51 +20,50 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     // Centrer la fenêtre sur l'écran
     Centre();
 
-    m_splitter = new wxSplitterWindow(this, wxID_ANY); /** Creates two subwindows */
+    m_splitter = std::make_unique<wxSplitterWindow>(this, wxID_ANY); /** Creates two subwindows */
 
     // Panneau gauche
-    wxPanel *leftPanel = new wxPanel(m_splitter, wxID_ANY);
-    wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
-    m_fileTree = new wxTreeCtrl(leftPanel, wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
-    leftSizer->Add(m_fileTree, 1, wxEXPAND | wxALL, 5);
-    m_grid = new wxGrid(leftPanel, wxID_ANY);
+    leftPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY);
+    leftSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
+
+    m_fileTree = std::make_unique<wxTreeCtrl>(leftPanel.get(), wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
+    leftSizer->Add(m_fileTree.get(), 1, wxEXPAND | wxALL, 5);
+    m_grid = std::make_unique<wxGrid>(leftPanel.get(), wxID_ANY);
     m_grid->CreateGrid(0, 2);
     m_grid->SetColLabelValue(0, "Tag");
     m_grid->SetColLabelValue(1, "Value");
-    leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);
+    leftSizer->Add(m_grid.get(), 1, wxEXPAND | wxALL, 5);
 
-    leftPanel->SetSizer(leftSizer);
+    leftPanel->SetSizer(leftSizer.get());
 
     // Panneau pour la liste à droite
-    wxPanel *rightPanel =
-        new wxPanel(m_splitter, wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
-    wxBoxSizer *rightSizer =
-        new wxBoxSizer(wxVERTICAL); /** Creates a sizer (boxSizer), not a wxWindow specialization */
+    rightPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
+    rightSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);              /** Creates a sizer (boxSizer), not a wxWindow specialization */
 
     // Créer la liste des fichiers sélectionnés
-    m_playList = new wxListBox(rightPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-    rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
+    m_playList = std::make_unique<wxListBox>(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+    rightSizer->Add(m_playList.get(), 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
 
     // Ajouter les boutons
-    wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_buttonUp = new wxButton(rightPanel, wxID_ANY, "Monter");
-    m_buttonDown = new wxButton(rightPanel, wxID_ANY, "Descendre");
-    m_buttonDelete = new wxButton(rightPanel, wxID_ANY, "Supprimer");
-    m_buttonGenerate = new wxButton(rightPanel, wxID_ANY, "Generer");
+    buttonSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+    m_buttonUp = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Monter");
+    m_buttonDown = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Descendre");
+    m_buttonDelete = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Supprimer");
+    m_buttonGenerate = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Generer");
 
-    buttonSizer->Add(m_buttonUp, 0, wxALL, 5);
-    buttonSizer->Add(m_buttonDown, 0, wxALL, 5);
-    buttonSizer->Add(m_buttonDelete, 0, wxALL, 5);
-    buttonSizer->Add(m_buttonGenerate, 0, wxALL, 5);
+    buttonSizer->Add(m_buttonUp.get(), 0, wxALL, 5);
+    buttonSizer->Add(m_buttonDown.get(), 0, wxALL, 5);
+    buttonSizer->Add(m_buttonDelete.get(), 0, wxALL, 5);
+    buttonSizer->Add(m_buttonGenerate.get(), 0, wxALL, 5);
 
-    rightSizer->Add(buttonSizer, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
+    rightSizer->Add(buttonSizer.get(), 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
 
     // Appliquer le sizer au panneau
-    rightPanel->SetSizer(rightSizer);
+    rightPanel->SetSizer(rightSizer.get());
     rightPanel->Layout();   // Forcer la mise en page du panneau
 
     // Configurer le splitter pour diviser la fenêtre en deux parties
-    m_splitter->SplitVertically(leftPanel, rightPanel);
+    m_splitter->SplitVertically(leftPanel.get(), rightPanel.get());
     m_splitter->SetMinimumPaneSize(width / 4);
     // Définir la position initiale du séparateur à 1/4 de la largeur
     m_splitter->SetSashPosition(width / 4);
@@ -86,6 +85,7 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_fileTree->Expand(rootId);
 
     m_fileTree->Bind(wxEVT_TREE_ITEM_ACTIVATED, &MainFrame::OnTreeItemActivated, this);
+    m_fileTree->Bind(wxEVT_TREE_SEL_CHANGED, &MainFrame::OnTreeSelectionChanged, this);
 
     // Lier les événements des boutons
     m_buttonUp->Bind(wxEVT_BUTTON, &MainFrame::OnMoveUp, this);
@@ -168,6 +168,65 @@ void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
     } else if (wxFileExists(path)) {
         m_playList->Append(path);
     }
+}
+
+void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
+    wxTreeItemId itemId = event.GetItem();
+    wxString path = GetFullPath(itemId);
+
+    if (wxFileExists(path)) {
+        UpdateGridWithFileInfo(path);
+    } else {
+        // Optionnel : effacer la grille si un dossier est sélectionné
+        m_grid->ClearGrid();
+        m_grid->ForceRefresh();
+    }
+}
+
+void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
+
+    // Effacer le contenu actuel de la grille
+    m_grid->ClearGrid();
+
+    const std::string path{filePath};
+    std::unique_ptr<tagManager> tagM;
+
+    try {
+        tagM = std::make_unique<tagManager>(path);
+    } catch (const FileNotFoundException &e) {
+        return;
+    } catch (const FileErrorException &e) {
+        return;
+    } catch (const NoTagsInFileException &e) {
+        return;
+    }
+
+    // Assurez-vous que la grille a au moins une ligne
+    if (m_grid->GetNumberRows() < 1) {
+        m_grid->AppendRows(1);
+    }
+
+    int currRow{0};
+    if (tagM) {
+        try {
+            std::string tagValue = tagM->getTitre(false);
+            m_grid->SetCellValue(currRow, 0, "Titre");
+            m_grid->SetCellValue(currRow, 1, tagValue);
+            currRow++;
+            m_grid->AppendRows(1);
+
+            tagValue = tagM->getInterprete(false);
+            m_grid->SetCellValue(currRow, 0, wxT("Interprète"));
+            m_grid->SetCellValue(currRow, 1, tagValue);
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+    // Redimensionner les colonnes pour s'adapter au contenu
+    m_grid->AutoSizeColumns();
+
+    // Forcer le rafraîchissement de la grille
+    m_grid->ForceRefresh();
 }
 
 wxString MainFrame::GetFullPath(wxTreeItemId itemId) {

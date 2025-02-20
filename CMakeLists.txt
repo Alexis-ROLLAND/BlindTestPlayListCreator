@@ -58,10 +58,11 @@ target_link_libraries(btplcreator TagLib::tag)
 add_executable(btplcreatorGUI     src/btplcreator_mainGUI.cpp
                                   src/mainframe.cpp
                                   src/Playlist.cpp
+                                  src/tagManager.cpp
                                   )
 # Inclure les répertoires d'en-têtes
 target_include_directories(btplcreatorGUI PRIVATE include)
-#target_link_libraries(btplcreatorGUI TagLib::tag)
+target_link_libraries(btplcreatorGUI TagLib::tag)
 target_link_libraries(btplcreatorGUI  wxWidgets::wxWidgets)
 
 

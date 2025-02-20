@@ -44,7 +44,17 @@
         "stdexcept": "cpp",
         "typeinfo": "cpp",
         "text_encoding": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "array": "cpp",
+        "clocale": "cpp",
+        "codecvt": "cpp",
+        "cstdio": "cpp",
+        "system_error": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "span": "cpp",
+        "variant": "cpp",
+        "print": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
