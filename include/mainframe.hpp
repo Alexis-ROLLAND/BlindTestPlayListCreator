@@ -21,7 +21,7 @@ class MainFrame : public wxFrame {
   private:
     wxSplitterWindow *m_splitter;
     wxTreeCtrl *m_fileTree;
-    wxListBox *m_fileList;
+    wxListBox *m_playList;
     wxButton *m_buttonUp;
     wxButton *m_buttonDown;
     wxButton *m_buttonDelete;

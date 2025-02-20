@@ -22,8 +22,8 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxD
     */
 
     // Créer la liste des fichiers sélectionnés
-    m_fileList = new wxListBox(rightPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-    rightSizer->Add(m_fileList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
+    m_playList = new wxListBox(rightPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+    rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
 
     // Ajouter les boutons
     wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -72,37 +72,37 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title, wxD
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
     UNUSED(event);
 
-    int sel = m_fileList->GetSelection();
+    int sel = m_playList->GetSelection();
     if (sel > 0) {
-        wxString item = m_fileList->GetString(sel);
-        m_fileList->Delete(sel);
-        m_fileList->Insert(item, sel - 1);
-        m_fileList->SetSelection(sel - 1);
+        wxString item = m_playList->GetString(sel);
+        m_playList->Delete(sel);
+        m_playList->Insert(item, sel - 1);
+        m_playList->SetSelection(sel - 1);
     }
 }
 
 void MainFrame::OnMoveDown(wxCommandEvent &event) {
     UNUSED(event);
 
-    int sel = m_fileList->GetSelection();
-    if (sel != wxNOT_FOUND && sel < m_fileList->GetCount() - 1) {
-        wxString item = m_fileList->GetString(sel);
-        m_fileList->Delete(sel);
-        m_fileList->Insert(item, sel + 1);
-        m_fileList->SetSelection(sel + 1);
+    int sel = m_playList->GetSelection();
+    if (sel != wxNOT_FOUND && sel < m_playList->GetCount() - 1) {
+        wxString item = m_playList->GetString(sel);
+        m_playList->Delete(sel);
+        m_playList->Insert(item, sel + 1);
+        m_playList->SetSelection(sel + 1);
     }
 }
 
 void MainFrame::OnDelete(wxCommandEvent &event) {
     UNUSED(event);
 
-    int sel = m_fileList->GetSelection();
+    int sel = m_playList->GetSelection();
     if (sel != wxNOT_FOUND) {
-        m_fileList->Delete(sel);
-        if (sel < m_fileList->GetCount())
-            m_fileList->SetSelection(sel);
-        else if (m_fileList->GetCount() > 0)
-            m_fileList->SetSelection(m_fileList->GetCount() - 1);
+        m_playList->Delete(sel);
+        if (sel < m_playList->GetCount())
+            m_playList->SetSelection(sel);
+        else if (m_playList->GetCount() > 0)
+            m_playList->SetSelection(m_playList->GetCount() - 1);
     }
 }
 
@@ -139,7 +139,7 @@ void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
             m_fileTree->Expand(itemId);
         }
     } else if (wxFileExists(path)) {
-        m_fileList->Append(path);
+        m_playList->Append(path);
     }
 }
 
