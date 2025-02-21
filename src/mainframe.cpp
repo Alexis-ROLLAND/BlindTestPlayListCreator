@@ -30,8 +30,13 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     leftSizer->Add(m_fileTree.get(), 1, wxEXPAND | wxALL, 5);
     m_grid = std::make_unique<wxGrid>(leftPanel.get(), wxID_ANY);
     m_grid->CreateGrid(0, 2);
+    m_grid->HideRowLabels();
     m_grid->SetColLabelValue(0, "Tag");
     m_grid->SetColLabelValue(1, "Value");
+    wxGridCellAttr *attr = new wxGridCellAttr();
+    attr->SetReadOnly();
+    m_grid->SetColAttr(0, attr);
+
     leftSizer->Add(m_grid.get(), 1, wxEXPAND | wxALL, 5);
 
     leftPanel->SetSizer(leftSizer.get());
@@ -131,7 +136,37 @@ void MainFrame::OnDelete(wxCommandEvent &event) {
     }
 }
 
-void MainFrame::OnGenerate(wxCommandEvent &event) { UNUSED(event); }
+void MainFrame::OnGenerate(wxCommandEvent &event) {
+    UNUSED(event);
+
+    int NbTitres = m_playList->GetCount();
+    if (NbTitres < 1) return;
+
+    wxFileDialog saveFileDialog(this, "Enregistrer le fichier", "", "", "Fichiers m3u (*.m3u)|*.m3u", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    if (saveFileDialog.ShowModal() == wxID_OK) {
+        wxString wxfileDir = saveFileDialog.GetDirectory();
+        wxString wxfileName = saveFileDialog.GetFilename();
+
+        std::string fileDir = std::string(wxfileDir.ToUTF8()) + "/";
+        std::string fileName = std::string(wxfileName.ToUTF8());
+
+        m3uPlaylist pl{fileName, fileDir};
+
+        std::println(std::clog, "File Name = {}", pl.getFileName());
+
+        for (int i = 0; i < NbTitres; ++i) {
+            wxString chaine = m_playList->GetString(i);
+            std::string filepath = std::string(chaine.ToUTF8());
+            pl.add(filepath);
+        }
+
+        try {
+            pl.generate();
+        } catch (const std::ios::failure &e) {
+            std::println(std::cerr, "Error Creating m3u file");
+        }
+    }
+}
 
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
 
@@ -185,14 +220,14 @@ void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
 
 void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
 
-    // std::clog << filePath << std::endl;
     //   Effacer le contenu actuel de la grille
     m_grid->ClearGrid();
-
+    m_grid->ClearSelection();
+    if (m_grid->GetNumberRows() > 0) m_grid->DeleteRows(0, m_grid->GetNumberRows());
+    m_grid->ForceRefresh();
     std::unique_ptr<tagManager> tagM;
 
     std::string path = std::string(filePath.ToUTF8());
-    // std::println(std::clog, "path = {0:}", path);
 
     try {
         tagM = std::make_unique<tagManager>(path);
@@ -204,23 +239,131 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         return;
     }
 
-    // Assurez-vous que la grille a au moins une ligne
-    if (m_grid->GetNumberRows() < 1) {
-        m_grid->AppendRows(1);
-    }
-
     int currRow{0};
+    std::string tagValue{};
+    /** TITLE tag */
     if (tagM) {
         try {
-            std::string tagValue = this->removeSpecialCharacters(tagM->getTitre(false));
-
+            tagValue = this->removeSpecialCharacters(tagM->getTitre(false));
+            m_grid->AppendRows(1);
             m_grid->SetCellValue(currRow, 0, "Titre");
+
             m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
             currRow++;
-            m_grid->AppendRows(1);
 
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** ARTIST tag */
+    if (tagM) {
+        try {
             tagValue = this->removeSpecialCharacters(tagM->getInterprete(false));
+            m_grid->AppendRows(1);
             m_grid->SetCellValue(currRow, 0, wxT("Interprète"));
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** DATE tag */
+    if (tagM) {
+        try {
+            int Date = tagM->getDate(false);
+            tagValue = std::to_string(Date);
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, wxT("Date"));
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** LANGUAGE tag */
+    if (tagM) {
+        try {
+            tagManager::btLanguage Langue = tagM->getLangue(false);
+            switch (Langue) {
+            case tagManager::btLanguage::FRA:
+                tagValue = "FRA";
+                break;
+            case tagManager::btLanguage::INT:
+                tagValue = "INT";
+                break;
+            default:
+                tagValue = "ERR";
+                break;
+            }
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, wxT("Langue"));
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** EXTRA tag */
+    if (tagM) {
+        try {
+            tagValue.clear();
+            if (tagM->isMovieSoundTrack(false)) tagValue += "Mv";
+            if (tagM->isTvShow(false)) tagValue += "Tv";
+            if (tagM->isMasterPiece(false)) tagValue += "Mp";
+            if (tagM->isSbig(false)) tagValue += "Sb";
+            if (tagM->isDuet(false)) tagValue += "Dt";
+            if (tagM->isCover(false)) tagValue += "Cv";
+            if (tagM->isName(false)) tagValue += "Na";
+            if (tagM->isCity(false)) tagValue += "Ci";
+
+            if (tagValue.empty()) tagValue = "None";
+
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, wxT("Extra"));
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** EXTRA TITLE tag */
+    if (tagM) {
+        try {
+            tagValue = this->removeSpecialCharacters(tagM->getExtraTitle(false));
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, "Extra Titre");
+
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** EXTRA ARTIST tag */
+    if (tagM) {
+        try {
+            tagValue = this->removeSpecialCharacters(tagM->getExtraArtist(false));
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, wxT("Extra Artist"));
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            currRow++;
+
+        } catch (const TagNotInTheFileException &e) {
+        }
+    }
+
+    /** EXTRA DATE tag */
+    if (tagM) {
+        try {
+            int Date = tagM->getExtraDate(false);
+            tagValue = std::to_string(Date);
+            m_grid->AppendRows(1);
+            m_grid->SetCellValue(currRow, 0, wxT("Extra Date"));
             m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
             currRow++;
 

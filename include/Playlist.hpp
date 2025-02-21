@@ -37,7 +37,7 @@ const std::string defaultExt{"m3u"};
 
 class m3uPlaylist : public Playlist {
   private:
-    const std::string ext{"defaultExt"};
+    const std::string ext{defaultExt};
     std::string targetDir{}; /**< Target DIRECTORY */
 
     std::string FileName{}; /** playlist full name : path\name.ext - created by

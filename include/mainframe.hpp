@@ -15,6 +15,7 @@
 
 #include <memory>
 
+#include "Playlist.hpp"
 #include "tagManager.hpp"
 
 #define UNUSED(x) static_cast<void>(x)
