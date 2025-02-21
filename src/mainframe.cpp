@@ -185,11 +185,14 @@ void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
 
 void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
 
-    // Effacer le contenu actuel de la grille
+    // std::clog << filePath << std::endl;
+    //   Effacer le contenu actuel de la grille
     m_grid->ClearGrid();
 
-    const std::string path{filePath};
     std::unique_ptr<tagManager> tagM;
+
+    std::string path = std::string(filePath.ToUTF8());
+    // std::println(std::clog, "path = {0:}", path);
 
     try {
         tagM = std::make_unique<tagManager>(path);
@@ -210,14 +213,16 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
     if (tagM) {
         try {
             std::string tagValue = tagM->getTitre(false);
+            std::println(std::clog, "TagValue Titre = {}", tagValue);
             m_grid->SetCellValue(currRow, 0, "Titre");
-            m_grid->SetCellValue(currRow, 1, tagValue);
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
             currRow++;
             m_grid->AppendRows(1);
 
             tagValue = tagM->getInterprete(false);
             m_grid->SetCellValue(currRow, 0, wxT("Interprète"));
             m_grid->SetCellValue(currRow, 1, tagValue);
+            currRow++;
 
         } catch (const TagNotInTheFileException &e) {
         }
