@@ -54,6 +54,8 @@ class MainFrame : public wxFrame {
     void OnMoveDown(wxCommandEvent &event);
     void OnDelete(wxCommandEvent &event);
     void OnGenerate(wxCommandEvent &event);
+
+    std::string removeSpecialCharacters(const std::string &input);
 };
 
 #endif /* __MAINFRAME_HPP__ */

@@ -212,16 +212,16 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
     int currRow{0};
     if (tagM) {
         try {
-            std::string tagValue = tagM->getTitre(false);
-            std::println(std::clog, "TagValue Titre = {}", tagValue);
+            std::string tagValue = this->removeSpecialCharacters(tagM->getTitre(false));
+
             m_grid->SetCellValue(currRow, 0, "Titre");
             m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
             currRow++;
             m_grid->AppendRows(1);
 
-            tagValue = tagM->getInterprete(false);
+            tagValue = this->removeSpecialCharacters(tagM->getInterprete(false));
             m_grid->SetCellValue(currRow, 0, wxT("Interprète"));
-            m_grid->SetCellValue(currRow, 1, tagValue);
+            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -248,4 +248,10 @@ wxString MainFrame::GetFullPath(wxTreeItemId itemId) {
     }
 
     return path;
+}
+
+std::string MainFrame::removeSpecialCharacters(const std::string &input) {
+    std::string result = input;
+    std::replace_if(result.begin(), result.end(), [](unsigned char c) { return c > 127; }, '_');
+    return result;
 }
