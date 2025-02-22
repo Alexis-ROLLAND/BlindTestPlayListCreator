@@ -11,8 +11,8 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     wxRect screenRect = display.GetClientArea();
 
     // Calculer les 3/4 de la largeur et de la hauteur
-    int width = (screenRect.GetWidth() * 3) / 4;
-    int height = (screenRect.GetHeight() * 3) / 4;
+    int width = screenRect.GetWidth() * SCREEN_FACTOR;
+    int height = screenRect.GetHeight() * SCREEN_FACTOR;
 
     // Définir la taille de la fenêtre
     SetSize(width, height);
@@ -24,33 +24,44 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
 
     // Panneau gauche
     leftPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY);
-    leftSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
+    wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
 
-    m_fileTree = std::make_unique<wxTreeCtrl>(leftPanel.get(), wxID_ANY); /** Creates a Tree Control (wxWindow specialization) */
-    leftSizer->Add(m_fileTree.get(), 1, wxEXPAND | wxALL, 5);
-    m_grid = std::make_unique<wxGrid>(leftPanel.get(), wxID_ANY);
-    m_grid->CreateGrid(0, 2);
-    m_grid->HideRowLabels();
-    m_grid->SetColLabelValue(0, "Tag");
-    m_grid->SetColLabelValue(1, "Value");
-    wxGridCellAttr *attr = new wxGridCellAttr();
-    attr->SetReadOnly();
-    m_grid->SetColAttr(0, attr);
+    m_fileTree = new wxTreeCtrl(leftPanel.get(), wxID_ANY);
+    leftSizer->Add(m_fileTree, 1, wxEXPAND | wxALL, 5);
 
-    leftSizer->Add(m_grid.get(), 1, wxEXPAND | wxALL, 5);
+    m_grid = new wxGrid(leftPanel.get(), wxID_ANY);
+    m_grid->CreateGrid(0, 1);
+    m_grid->SetColLabelValue(0, COL_LABEL_VALUE);
+    // m_grid->HideRowLabels();
+    // m_grid->SetColLabelValue(0, COL_LABEL_TAG);
+    // m_grid->SetColLabelValue(1, COL_LABEL_VALUE);
+    // wxGridCellAttr *attr = new wxGridCellAttr();
+    // attr->SetReadOnly();
+    // m_grid->SetColAttr(0, attr);
+    m_grid->Bind(wxEVT_GRID_CELL_CHANGED, &MainFrame::OnGridCellChanged, this);
 
-    leftPanel->SetSizer(leftSizer.get());
+    m_buttonUpdate = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, "Update");
+    m_buttonUpdate->Enable(false); /** Bouton inactif par défaut */
+
+    leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);
+    leftSizer->Add(m_buttonUpdate.get(), 0, wxALIGN_CENTER | wxALL, 5);
+
+    leftPanel->SetSizer(leftSizer);
 
     // Panneau pour la liste à droite
     rightPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
-    rightSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);              /** Creates a sizer (boxSizer), not a wxWindow specialization */
+
+    wxBoxSizer *rightSizer = new wxBoxSizer(wxVERTICAL);
 
     // Créer la liste des fichiers sélectionnés
-    m_playList = std::make_unique<wxListBox>(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
-    rightSizer->Add(m_playList.get(), 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
+
+    m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+
+    rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
 
     // Ajouter les boutons
-    buttonSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+
+    wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     m_buttonUp = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Monter");
     m_buttonDown = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Descendre");
     m_buttonDelete = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Supprimer");
@@ -61,10 +72,11 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     buttonSizer->Add(m_buttonDelete.get(), 0, wxALL, 5);
     buttonSizer->Add(m_buttonGenerate.get(), 0, wxALL, 5);
 
-    rightSizer->Add(buttonSizer.get(), 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
+    rightSizer->Add(buttonSizer, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
 
     // Appliquer le sizer au panneau
-    rightPanel->SetSizer(rightSizer.get());
+
+    rightPanel->SetSizer(rightSizer);
     rightPanel->Layout();   // Forcer la mise en page du panneau
 
     // Configurer le splitter pour diviser la fenêtre en deux parties
@@ -97,6 +109,7 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_buttonDown->Bind(wxEVT_BUTTON, &MainFrame::OnMoveDown, this);
     m_buttonDelete->Bind(wxEVT_BUTTON, &MainFrame::OnDelete, this);
     m_buttonGenerate->Bind(wxEVT_BUTTON, &MainFrame::OnGenerate, this);
+    m_buttonUpdate->Bind(wxEVT_BUTTON, &MainFrame::OnUpdate, this);
 }
 
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
@@ -246,9 +259,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getTitre(false));
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, "Titre");
-
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_TITRE));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -260,8 +272,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getInterprete(false));
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Interprète"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_ARTIST));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -274,8 +286,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             int Date = tagM->getDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Date"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxT("Date"));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -298,8 +310,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
                 break;
             }
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Langue"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxT("Langue"));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -322,8 +334,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             if (tagValue.empty()) tagValue = "None";
 
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Extra"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxT("Extra"));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -335,9 +347,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraTitle(false));
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, "Extra Titre");
-
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, "Extra Titre");
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -349,8 +360,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraArtist(false));
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Extra Artist"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxT("Extra Artist"));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -363,8 +374,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             int Date = tagM->getExtraDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
-            m_grid->SetCellValue(currRow, 0, wxT("Extra Date"));
-            m_grid->SetCellValue(currRow, 1, wxString::FromUTF8(tagValue));
+            m_grid->SetRowLabelValue(currRow, wxT("Extra Date"));
+            m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
         } catch (const TagNotInTheFileException &e) {
@@ -397,4 +408,13 @@ std::string MainFrame::removeSpecialCharacters(const std::string &input) {
     std::string result = input;
     std::replace_if(result.begin(), result.end(), [](unsigned char c) { return c > 127; }, '_');
     return result;
+}
+
+void MainFrame::OnGridCellChanged(wxGridEvent &event) {
+    m_buttonUpdate->Enable(true);
+    event.Skip();
+}
+void MainFrame::OnUpdate(wxCommandEvent &event) {
+    UNUSED(event);   // Désactiver le bouton
+    m_buttonUpdate->Enable(false);
 }
