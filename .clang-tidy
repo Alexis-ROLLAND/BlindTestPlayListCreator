@@ -1,4 +1,5 @@
 Checks: '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm-*'
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
+HeaderFilterRegex: '^((?!\/usr\/include).)*$'
+SystemHeaders: false
 FormatStyle: none

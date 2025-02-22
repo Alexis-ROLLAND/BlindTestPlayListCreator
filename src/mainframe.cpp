@@ -286,7 +286,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             int Date = tagM->getDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, wxT("Date"));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_DATE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -310,7 +310,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
                 break;
             }
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, wxT("Langue"));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_LANGUAGE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -334,7 +334,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             if (tagValue.empty()) tagValue = "None";
 
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, wxT("Extra"));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -347,7 +347,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraTitle(false));
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, "Extra Titre");
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_TITLE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -360,7 +360,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
         try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraArtist(false));
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, wxT("Extra Artist"));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_ARTIST));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -374,7 +374,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
             int Date = tagM->getExtraDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
-            m_grid->SetRowLabelValue(currRow, wxT("Extra Date"));
+            m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_DATE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
 
@@ -411,6 +411,11 @@ std::string MainFrame::removeSpecialCharacters(const std::string &input) {
 }
 
 void MainFrame::OnGridCellChanged(wxGridEvent &event) {
+    int row = event.GetRow();
+    std::string Tag{m_grid->GetRowLabelValue(row).utf8_str()};
+    std::string NewValue{m_grid->GetCellValue(row, 0).utf8_str()};
+
+    std::println(std::clog, "Tag = {} - New Value = {}", Tag, NewValue);
     m_buttonUpdate->Enable(true);
     event.Skip();
 }
