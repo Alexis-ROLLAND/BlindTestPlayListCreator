@@ -42,6 +42,13 @@ class MainFrame : public wxFrame {
 
     std::unique_ptr<wxButton> m_buttonUpdate;
 
+    /**
+     * @brief Prepares the screen from start to splitter and panels (left + right) construction
+     *
+     * @return std::pair<int, int> : width and height of the display.
+     */
+    std::pair<int, int> PrepareScreen();
+
     void OnTreeItemActivated(wxTreeEvent &event);
     void OnTreeSelectionChanged(wxTreeEvent &event);
     void PopulateFileTree(const wxString &path, wxTreeItemId parentId);

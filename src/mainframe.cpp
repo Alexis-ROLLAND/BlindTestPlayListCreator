@@ -6,56 +6,33 @@
 
 MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
 
-    // Obtenir la taille de l'écran principal
-    wxDisplay display{};
-    wxRect screenRect = display.GetClientArea();
+    auto [width, height] = this->PrepareScreen();
 
-    // Calculer les 3/4 de la largeur et de la hauteur
-    int width = screenRect.GetWidth() * SCREEN_FACTOR;
-    int height = screenRect.GetHeight() * SCREEN_FACTOR;
+    /** ------------------  Left Side ------------------------*/
+    wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL); /** Creating a (Box) Sizer */
 
-    // Définir la taille de la fenêtre
-    SetSize(width, height);
+    m_fileTree = new wxTreeCtrl(leftPanel.get(), wxID_ANY); /** Creating a TreeCtrl (the File tree) */
+    leftSizer->Add(m_fileTree, 1, wxEXPAND | wxALL, 5);     /** Adding file tree to the sizer */
 
-    // Centrer la fenêtre sur l'écran
-    Centre();
-
-    m_splitter = std::make_unique<wxSplitterWindow>(this, wxID_ANY); /** Creates two subwindows */
-
-    // Panneau gauche
-    leftPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY);
-    wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
-
-    m_fileTree = new wxTreeCtrl(leftPanel.get(), wxID_ANY);
-    leftSizer->Add(m_fileTree, 1, wxEXPAND | wxALL, 5);
-
+    /** Creating and configuring the grid */
     m_grid = new wxGrid(leftPanel.get(), wxID_ANY);
     m_grid->CreateGrid(0, 1);
     m_grid->SetColLabelValue(0, COL_LABEL_VALUE);
-    // m_grid->HideRowLabels();
-    // m_grid->SetColLabelValue(0, COL_LABEL_TAG);
-    // m_grid->SetColLabelValue(1, COL_LABEL_VALUE);
-    // wxGridCellAttr *attr = new wxGridCellAttr();
-    // attr->SetReadOnly();
-    // m_grid->SetColAttr(0, attr);
-    m_grid->Bind(wxEVT_GRID_CELL_CHANGED, &MainFrame::OnGridCellChanged, this);
+    m_grid->Bind(wxEVT_GRID_CELL_CHANGED, &MainFrame::OnGridCellChanged, this); /** Bind event  */
+    leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);                             /** Add the grid to the sizer */
 
-    m_buttonUpdate = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, "Update");
-    m_buttonUpdate->Enable(false); /** Bouton inactif par défaut */
+    m_buttonUpdate = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, "Update"); /** Creates the "update" button */
+    m_buttonUpdate->Enable(false);                                                    /** Bouton inactif par défaut */
 
-    leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);
-    leftSizer->Add(m_buttonUpdate.get(), 0, wxALIGN_CENTER | wxALL, 5);
+    leftSizer->Add(m_buttonUpdate.get(), 0, wxALIGN_CENTER | wxALL, 5); /** Add button to the sizer */
 
-    leftPanel->SetSizer(leftSizer);
+    leftPanel->SetSizer(leftSizer); /** Assign leftSizer to left Panel */
 
-    // Panneau pour la liste à droite
-    rightPanel = std::make_unique<wxPanel>(m_splitter.get(), wxID_ANY); /** Creates a Panel (wxWindow specialization, graphical container) */
+    /** ------------------  Right Side ------------------------*/
 
     wxBoxSizer *rightSizer = new wxBoxSizer(wxVERTICAL);
 
-    // Créer la liste des fichiers sélectionnés
-
-    m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+        m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
     rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
 
@@ -79,11 +56,12 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     rightPanel->SetSizer(rightSizer);
     rightPanel->Layout();   // Forcer la mise en page du panneau
 
-    // Configurer le splitter pour diviser la fenêtre en deux parties
     m_splitter->SplitVertically(leftPanel.get(), rightPanel.get());
+
     m_splitter->SetMinimumPaneSize(width / 4);
     // Définir la position initiale du séparateur à 1/4 de la largeur
     m_splitter->SetSashPosition(width / 4);
+    // Créer la liste des fichiers sélectionnés
 
     // Obtenir le répertoire home
     wxString homeDir = wxGetHomeDir();
@@ -110,6 +88,28 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_buttonDelete->Bind(wxEVT_BUTTON, &MainFrame::OnDelete, this);
     m_buttonGenerate->Bind(wxEVT_BUTTON, &MainFrame::OnGenerate, this);
     m_buttonUpdate->Bind(wxEVT_BUTTON, &MainFrame::OnUpdate, this);
+}
+
+std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'écran principal
+    wxDisplay display{};
+    wxRect screenRect = display.GetClientArea();
+
+    // Calculer les 3/4 de la largeur et de la hauteur
+    int width = screenRect.GetWidth() * SCREEN_FACTOR;
+    int height = screenRect.GetHeight() * SCREEN_FACTOR;
+
+    // Définir la taille de la fenêtre
+    SetSize(width, height);
+
+    // Centrer la fenêtre sur l'écran
+    Centre();
+
+    this->m_splitter = std::make_unique<wxSplitterWindow>(this, wxID_ANY);    /** Creates two subwindows */
+    leftPanel = std::make_unique<wxPanel>(this->m_splitter.get(), wxID_ANY);  /** Creates the left Panel (wxWindow specialization, graphical container) */
+    rightPanel = std::make_unique<wxPanel>(this->m_splitter.get(), wxID_ANY); /** Creates the right Panel (wxWindow specialization, graphical container) */
+
+    // Retourner les coordonnées
+    return std::make_pair(width, height);
 }
 
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
