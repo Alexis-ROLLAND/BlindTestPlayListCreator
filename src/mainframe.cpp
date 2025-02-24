@@ -21,28 +21,37 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_grid->Bind(wxEVT_GRID_CELL_CHANGED, &MainFrame::OnGridCellChanged, this); /** Bind event  */
     leftSizer->Add(m_grid, 1, wxEXPAND | wxALL, 5);                             /** Add the grid to the sizer */
 
-    m_buttonUpdate = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, "Update"); /** Creates the "update" button */
-    m_buttonUpdate->Enable(false);                                                    /** Bouton inactif par défaut */
+    wxBoxSizer *leftbuttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    leftSizer->Add(m_buttonUpdate.get(), 0, wxALIGN_CENTER | wxALL, 5); /** Add button to the sizer */
+    m_buttonPrepare = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_PREPARE));
+    m_buttonPrepare->Enable(false);
+
+    m_buttonUpdate = std::make_unique<wxButton>(leftPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_UPDATE)); /** Creates the "update" button */
+    m_buttonUpdate->Enable(false);                                                                                   /** Bouton inactif par défaut */
+
+    leftbuttonSizer->Add(m_buttonPrepare.get(), 0, wxALIGN_CENTER | wxALL, 5); /** Add button to the sizer */
+    leftbuttonSizer->Add(m_buttonUpdate.get(), 0, wxALIGN_CENTER | wxALL, 5);  /** Add button to the sizer */
+
+    leftSizer->Add(leftbuttonSizer, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
 
     leftPanel->SetSizer(leftSizer); /** Assign leftSizer to left Panel */
 
     /** ------------------  Right Side ------------------------*/
+    wxBoxSizer *rightSizer = new wxBoxSizer(wxVERTICAL); /** Creating a (Box) Sizer */
 
-    wxBoxSizer *rightSizer = new wxBoxSizer(wxVERTICAL);
+    // Ajouter un label pour la liste
+    wxStaticText *listLabel = new wxStaticText(rightPanel.get(), wxID_ANY, wxString::FromUTF8(LIST_LABEL_FILELIST));
+    rightSizer->Add(listLabel, 0, wxALL | wxCENTER, 5);
 
-        m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+    m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize); /** Create a ListBox */
+    rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);                                     // La liste occupe tout l'espace restant
 
-    rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);   // La liste occupe tout l'espace restant
-
-    // Ajouter les boutons
-
+    // Ajouter les boutons dans leur propre sizer
     wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_buttonUp = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Monter");
-    m_buttonDown = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Descendre");
-    m_buttonDelete = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Supprimer");
-    m_buttonGenerate = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, "Generer");
+    m_buttonUp = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_MONTER));
+    m_buttonDown = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_DESCENDRE));
+    m_buttonDelete = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_SUPPRIMER));
+    m_buttonGenerate = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_GENERER));
 
     buttonSizer->Add(m_buttonUp.get(), 0, wxALL, 5);
     buttonSizer->Add(m_buttonDown.get(), 0, wxALL, 5);
@@ -52,8 +61,8 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     rightSizer->Add(buttonSizer, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
 
     // Appliquer le sizer au panneau
-
     rightPanel->SetSizer(rightSizer);
+
     rightPanel->Layout();   // Forcer la mise en page du panneau
 
     m_splitter->SplitVertically(leftPanel.get(), rightPanel.get());
@@ -65,11 +74,11 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
 
     // Obtenir le répertoire home
     wxString homeDir = wxGetHomeDir();
-    wxString rootDir = homeDir + wxFILE_SEP_PATH + "Musique";   // Sous-répertoire spécifique
+    wxString rootDir = homeDir + wxFILE_SEP_PATH + wxString::FromUTF8(START_DIRECTORY);   // Sous-répertoire spécifique
 
     // Vérifier si le répertoire existe
     if (!wxDir::Exists(rootDir)) {
-        wxMessageBox("Le répertoire spécifié n'existe pas : " + rootDir, "Erreur", wxOK | wxICON_ERROR);
+        wxMessageBox(wxString::FromUTF8("Le répertoire spécifié n'existe pas : ") + rootDir, wxString::FromUTF8("Erreur"), wxOK | wxICON_ERROR);
         Close();   // Ferme la fenêtre principale
         return;
     }
@@ -88,8 +97,9 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_buttonDelete->Bind(wxEVT_BUTTON, &MainFrame::OnDelete, this);
     m_buttonGenerate->Bind(wxEVT_BUTTON, &MainFrame::OnGenerate, this);
     m_buttonUpdate->Bind(wxEVT_BUTTON, &MainFrame::OnUpdate, this);
+    m_buttonPrepare->Bind(wxEVT_BUTTON, &MainFrame::OnPrepare, this);
 }
-
+/**------------------------------------------------------------------------------------------------*/
 std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'écran principal
     wxDisplay display{};
     wxRect screenRect = display.GetClientArea();
@@ -111,7 +121,7 @@ std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'éc
     // Retourner les coordonnées
     return std::make_pair(width, height);
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
     UNUSED(event);
 
@@ -123,32 +133,34 @@ void MainFrame::OnMoveUp(wxCommandEvent &event) {
         m_playList->SetSelection(sel - 1);
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnMoveDown(wxCommandEvent &event) {
     UNUSED(event);
 
     int sel = m_playList->GetSelection();
-    if (sel != wxNOT_FOUND && sel < m_playList->GetCount() - 1) {
+    if (sel == wxNOT_FOUND) return; /** No item selected */
+
+    if (static_cast<unsigned int>(sel) < m_playList->GetCount() - 1) {
         wxString item = m_playList->GetString(sel);
         m_playList->Delete(sel);
         m_playList->Insert(item, sel + 1);
         m_playList->SetSelection(sel + 1);
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnDelete(wxCommandEvent &event) {
     UNUSED(event);
 
     int sel = m_playList->GetSelection();
-    if (sel != wxNOT_FOUND) {
-        m_playList->Delete(sel);
-        if (sel < m_playList->GetCount())
-            m_playList->SetSelection(sel);
-        else if (m_playList->GetCount() > 0)
-            m_playList->SetSelection(m_playList->GetCount() - 1);
-    }
-}
+    if (sel == wxNOT_FOUND) return; /** No item selected */
 
+    m_playList->Delete(sel);
+    if (static_cast<unsigned int>(sel) < m_playList->GetCount())
+        m_playList->SetSelection(sel);
+    else if (m_playList->GetCount() > 0)
+        m_playList->SetSelection(m_playList->GetCount() - 1);
+}
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnGenerate(wxCommandEvent &event) {
     UNUSED(event);
 
@@ -160,7 +172,7 @@ void MainFrame::OnGenerate(wxCommandEvent &event) {
         wxString wxfileDir = saveFileDialog.GetDirectory();
         wxString wxfileName = saveFileDialog.GetFilename();
 
-        std::string fileDir = std::string(wxfileDir.ToUTF8()) + "/";
+        std::string fileDir = std::string(wxfileDir.ToUTF8()) + std::string{wxFILE_SEP_PATH};
         std::string fileName = std::string(wxfileName.ToUTF8());
 
         m3uPlaylist pl{fileName, fileDir};
@@ -180,7 +192,7 @@ void MainFrame::OnGenerate(wxCommandEvent &event) {
         }
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
 
     wxDir dir(path);
@@ -200,7 +212,7 @@ void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
         } while (dir.GetNext(&filename));
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
     wxTreeItemId itemId = event.GetItem();
     wxString path = GetFullPath(itemId);
@@ -217,10 +229,11 @@ void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
         m_playList->Append(path);
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
     wxTreeItemId itemId = event.GetItem();
     wxString path = GetFullPath(itemId);
+    this->TagsChanged.clear();
 
     if (wxFileExists(path)) {
         UpdateGridWithFileInfo(path);
@@ -230,9 +243,10 @@ void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
         m_grid->ForceRefresh();
     }
 }
-
+/**------------------------------------------------------------------------------------------------*/
 void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
 
+    if (!this->TagsChanged.empty()) this->TagsChanged.clear();
     //   Effacer le contenu actuel de la grille
     m_grid->ClearGrid();
     m_grid->ClearSelection();
@@ -251,6 +265,8 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
     } catch (const NoTagsInFileException &e) {
         return;
     }
+
+    this->m_buttonPrepare->Enable(true);
 
     int currRow{0};
     std::string tagValue{};
@@ -387,7 +403,96 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
     // Forcer le rafraîchissement de la grille
     m_grid->ForceRefresh();
 }
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnGridCellChanged(wxGridEvent &event) {
+    int row = event.GetRow();
+    std::string Tag{m_grid->GetRowLabelValue(row).utf8_str()};
+    std::string NewValue{m_grid->GetCellValue(row, 0).utf8_str()};
+    this->TagsChanged.push_back(std::make_pair(Tag, NewValue));
+    // std::println(std::clog, "Tag = {} - New Value = {}", Tag, NewValue);
+    m_buttonUpdate->Enable(true);
+    // event.Skip();    /** Usefull ? */
+}
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnUpdate(wxCommandEvent &event) {
+    UNUSED(event);
 
+    this->UpdateTags();
+    m_buttonUpdate->Enable(false);   // Désactiver le bouton
+}
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnPrepare(wxCommandEvent &event) {
+    UNUSED(event);
+    this->PrepareTags();
+    m_buttonPrepare->Enable(false);   // Désactiver le bouton
+}
+/**------------------------------------------------------------------------------------------------*/
+bool MainFrame::PrepareTags() {
+    wxTreeItemId itemId = m_fileTree->GetFocusedItem();
+    wxString tree_path = GetFullPath(itemId);
+
+    std::unique_ptr<tagManager> tagM;
+
+    std::string path = std::string(tree_path.ToUTF8());
+
+    // std::println(std::clog, "File to update : {}", path);
+
+    try {
+        tagM = std::make_unique<tagManager>(path);
+    } catch (const FileNotFoundException &e) {
+        return false;
+    } catch (const FileErrorException &e) {
+        return false;
+    } catch (const NoTagsInFileException &e) {
+        return false;
+    }
+
+    tagM->prepareFile(true);
+
+    this->UpdateGridWithFileInfo(tree_path);
+
+    return true;
+}
+/**------------------------------------------------------------------------------------------------*/
+bool MainFrame::UpdateTags() {
+    if (this->TagsChanged.empty()) return false;
+
+    wxTreeItemId itemId = m_fileTree->GetFocusedItem();
+    wxString tree_path = GetFullPath(itemId);
+
+    std::unique_ptr<tagManager> tagM;
+
+    std::string path = std::string(tree_path.ToUTF8());
+
+    // std::println(std::clog, "File to update : {}", path);
+
+    try {
+        tagM = std::make_unique<tagManager>(path);
+    } catch (const FileNotFoundException &e) {
+        return false;
+    } catch (const FileErrorException &e) {
+        return false;
+    } catch (const NoTagsInFileException &e) {
+        return false;
+    }
+
+    for (auto item : this->TagsChanged) {
+        // std::println(std::clog, "Tag = {} - New Value = {}", item.first, item.second);
+        if (item.first == ROW_LABEL_VALUE_TITRE)
+            tagM->setTitre(item.second);
+        else if (item.first == ROW_LABEL_VALUE_ARTIST)
+            tagM->setInterprete(item.second);
+        else if (item.first == ROW_LABEL_VALUE_EXTRA_TITLE)
+            tagM->setExtraTitle(item.second);
+        else if (item.first == ROW_LABEL_VALUE_EXTRA_ARTIST)
+            tagM->setExtraArtist(item.second);
+    }
+    if (tagM->update()) this->UpdateGridWithFileInfo(tree_path);
+
+    return true;
+}
+
+/**------------------------------------------------------------------------------------------------*/
 wxString MainFrame::GetFullPath(wxTreeItemId itemId) {
     wxString path = m_fileTree->GetItemText(itemId);
     wxTreeItemId parent = m_fileTree->GetItemParent(itemId);
@@ -403,23 +508,10 @@ wxString MainFrame::GetFullPath(wxTreeItemId itemId) {
 
     return path;
 }
-
+/**------------------------------------------------------------------------------------------------*/
 std::string MainFrame::removeSpecialCharacters(const std::string &input) {
     std::string result = input;
     std::replace_if(result.begin(), result.end(), [](unsigned char c) { return c > 127; }, '_');
     return result;
 }
-
-void MainFrame::OnGridCellChanged(wxGridEvent &event) {
-    int row = event.GetRow();
-    std::string Tag{m_grid->GetRowLabelValue(row).utf8_str()};
-    std::string NewValue{m_grid->GetCellValue(row, 0).utf8_str()};
-
-    std::println(std::clog, "Tag = {} - New Value = {}", Tag, NewValue);
-    m_buttonUpdate->Enable(true);
-    event.Skip();
-}
-void MainFrame::OnUpdate(wxCommandEvent &event) {
-    UNUSED(event);   // Désactiver le bouton
-    m_buttonUpdate->Enable(false);
-}
+/**------------------------------------------------------------------------------------------------*/

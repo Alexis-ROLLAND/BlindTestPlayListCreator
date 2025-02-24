@@ -21,4 +21,15 @@ const std::string ROW_LABEL_VALUE_EXTRA_TITLE{"Extra Titre"};
 const std::string ROW_LABEL_VALUE_EXTRA_ARTIST{"Extra Artist"};
 const std::string ROW_LABEL_VALUE_EXTRA_DATE{"Extra Date"};
 
+const std::string LIST_LABEL_FILELIST{"Fichiers sélectionnés"};
+
+const std::string BUTTON_LABEL_UPDATE{"Update"};
+const std::string BUTTON_LABEL_PREPARE{"Prepare File"};
+const std::string BUTTON_LABEL_MONTER{"Monter"};
+const std::string BUTTON_LABEL_DESCENDRE{"Descendre"};
+const std::string BUTTON_LABEL_SUPPRIMER{"Supprimer"};
+const std::string BUTTON_LABEL_GENERER{"Générer"};
+
+const std::string START_DIRECTORY{"Musique"};
+
 #endif /* __RESSOURCES_HPP__ */

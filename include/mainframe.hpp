@@ -20,6 +20,8 @@
 #include "Playlist.hpp"
 #include "tagManager.hpp"
 
+using TagAndValue = std::pair<std::string, std::string>;
+
 class MainFrame : public wxFrame {
   public:
     MainFrame(const wxString &title);
@@ -41,6 +43,9 @@ class MainFrame : public wxFrame {
     std::unique_ptr<wxButton> m_buttonGenerate;
 
     std::unique_ptr<wxButton> m_buttonUpdate;
+    std::unique_ptr<wxButton> m_buttonPrepare;
+
+    std::vector<TagAndValue> TagsChanged{};
 
     /**
      * @brief Prepares the screen from start to splitter and panels (left + right) construction
@@ -60,8 +65,11 @@ class MainFrame : public wxFrame {
     void OnDelete(wxCommandEvent &event);
     void OnGenerate(wxCommandEvent &event);
     void OnUpdate(wxCommandEvent &event);
+    void OnPrepare(wxCommandEvent &event);
     void OnGridCellChanged(wxGridEvent &event);
 
+    bool UpdateTags();
+    bool PrepareTags();
     std::string removeSpecialCharacters(const std::string &input);
 };
 
