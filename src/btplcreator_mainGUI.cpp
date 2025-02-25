@@ -6,7 +6,12 @@ class MyApp : public wxApp {
 };
 
 bool MyApp::OnInit() {
-    MainFrame *frame = new MainFrame("Blind Test PlayList Creator");
+
+    std::string path{};
+    if (this->argc == 2) path = std::string(this->argv[1].ToUTF8());
+
+    MainFrame *frame = new MainFrame("Blind Test PlayList Creator", path);
+
     frame->Show(true);
     return true;
 }

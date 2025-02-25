@@ -4,7 +4,7 @@
 #include <wx/filename.h>
 #include <wx/stattext.h>
 
-MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
+MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(NULL, wxID_ANY, title), startPath{path} {
 
     auto [width, height] = this->PrepareScreen();
 
@@ -70,11 +70,11 @@ MainFrame::MainFrame(const wxString &title) : wxFrame(NULL, wxID_ANY, title) {
     m_splitter->SetMinimumPaneSize(width / 4);
     // Définir la position initiale du séparateur à 1/4 de la largeur
     m_splitter->SetSashPosition(width / 4);
-    // Créer la liste des fichiers sélectionnés
 
-    // Obtenir le répertoire home
-    wxString homeDir = wxGetHomeDir();
-    wxString rootDir = homeDir + wxFILE_SEP_PATH + wxString::FromUTF8(START_DIRECTORY);   // Sous-répertoire spécifique
+    // Créer la liste des fichiers sélectionnés
+    if (path.empty()) this->startPath = wxGetHomeDir();
+    // std::println(std::clog, "Start Path = {}", this->startPath);
+    wxString rootDir = wxString::FromUTF8(this->startPath);
 
     // Vérifier si le répertoire existe
     if (!wxDir::Exists(rootDir)) {
@@ -121,6 +121,7 @@ std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'éc
     // Retourner les coordonnées
     return std::make_pair(width, height);
 }
+
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
     UNUSED(event);
@@ -338,16 +339,16 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
     if (tagM) {
         try {
             tagValue.clear();
-            if (tagM->isMovieSoundTrack(false)) tagValue += "Mv";
-            if (tagM->isTvShow(false)) tagValue += "Tv";
-            if (tagM->isMasterPiece(false)) tagValue += "Mp";
-            if (tagM->isSbig(false)) tagValue += "Sb";
-            if (tagM->isDuet(false)) tagValue += "Dt";
-            if (tagM->isCover(false)) tagValue += "Cv";
-            if (tagM->isName(false)) tagValue += "Na";
-            if (tagM->isCity(false)) tagValue += "Ci";
+            if (tagM->isMovieSoundTrack(false)) tagValue += EXTRA_TAG_MOVIE;
+            if (tagM->isTvShow(false)) tagValue += EXTRA_TAG_TV;
+            if (tagM->isMasterPiece(false)) tagValue += EXTRA_TAG_MASTERPIECE;
+            if (tagM->isSbig(false)) tagValue += EXTRA_TAG_SOBADISGOOD;
+            if (tagM->isDuet(false)) tagValue += EXTRA_TAG_DUET;
+            if (tagM->isCover(false)) tagValue += EXTRA_TAG_COVER;
+            if (tagM->isName(false)) tagValue += EXTRA_TAG_NAME;
+            if (tagM->isCity(false)) tagValue += EXTRA_TAG_CITY;
 
-            if (tagValue.empty()) tagValue = "None";
+            if (tagValue.empty()) tagValue = EXTRA_TAG_NONE;
 
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA));
@@ -447,11 +448,12 @@ bool MainFrame::PrepareTags() {
         return false;
     }
 
-    tagM->prepareFile(true);
-
-    this->UpdateGridWithFileInfo(tree_path);
-
-    return true;
+    if (tagM) {
+        tagM->prepareFile(true);
+        this->UpdateGridWithFileInfo(tree_path);
+        return true;
+    }
+    return false;
 }
 /**------------------------------------------------------------------------------------------------*/
 bool MainFrame::UpdateTags() {
@@ -476,6 +478,8 @@ bool MainFrame::UpdateTags() {
         return false;
     }
 
+    if (!tagM) return false;
+
     for (auto item : this->TagsChanged) {
         // std::println(std::clog, "Tag = {} - New Value = {}", item.first, item.second);
         if (item.first == ROW_LABEL_VALUE_TITRE)
@@ -486,6 +490,29 @@ bool MainFrame::UpdateTags() {
             tagM->setExtraTitle(item.second);
         else if (item.first == ROW_LABEL_VALUE_EXTRA_ARTIST)
             tagM->setExtraArtist(item.second);
+        else if (item.first == ROW_LABEL_VALUE_DATE) {
+            int date = this->StringToInt(item.second);
+            tagM->setDate(date);
+        } else if (item.first == ROW_LABEL_VALUE_EXTRA_DATE) {
+            int date = this->StringToInt(item.second);
+            tagM->setExtraDate(date);
+        } else if (item.first == ROW_LABEL_VALUE_EXTRA) {
+            std::string str = item.second;
+            tagM->setMovieSoundTrackFlag(str.contains(EXTRA_TAG_MOVIE));
+            tagM->setTvShowFlag(str.contains(EXTRA_TAG_TV));
+            tagM->setMasterPieceFlag(str.contains(EXTRA_TAG_MASTERPIECE));
+            tagM->setSbigFlag(str.contains(EXTRA_TAG_SOBADISGOOD));
+            tagM->setDuetFlag(str.contains(EXTRA_TAG_DUET));
+            tagM->setCoverFlag(str.contains(EXTRA_TAG_COVER));
+            tagM->setNameFlag(str.contains(EXTRA_TAG_NAME));
+            tagM->setCityFlag(str.contains(EXTRA_TAG_CITY));
+        } else if (item.first == ROW_LABEL_VALUE_LANGUAGE) {
+            std::string str = item.second;
+            if (str == "FRA")
+                tagM->setLangue(tagManager::btLanguage::FRA);
+            else if (str == "INT")
+                tagM->setLangue(tagManager::btLanguage::INT);
+        }
     }
     if (tagM->update()) this->UpdateGridWithFileInfo(tree_path);
 
@@ -513,5 +540,16 @@ std::string MainFrame::removeSpecialCharacters(const std::string &input) {
     std::string result = input;
     std::replace_if(result.begin(), result.end(), [](unsigned char c) { return c > 127; }, '_');
     return result;
+}
+/**------------------------------------------------------------------------------------------------*/
+int MainFrame::StringToInt(const std::string &str) {
+    int result = 0;
+    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+
+    if (ec == std::errc() && ptr == str.data() + str.size()) {
+        return result;
+    } else {
+        return BAD_YEAR_VALUE;
+    }
 }
 /**------------------------------------------------------------------------------------------------*/

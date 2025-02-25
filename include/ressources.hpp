@@ -30,6 +30,16 @@ const std::string BUTTON_LABEL_DESCENDRE{"Descendre"};
 const std::string BUTTON_LABEL_SUPPRIMER{"Supprimer"};
 const std::string BUTTON_LABEL_GENERER{"Générer"};
 
-const std::string START_DIRECTORY{"Musique"};
+const int BAD_YEAR_VALUE{9999};
+
+const std::string EXTRA_TAG_MOVIE{"Mv"};
+const std::string EXTRA_TAG_TV{"Tv"};
+const std::string EXTRA_TAG_MASTERPIECE{"Mp"};
+const std::string EXTRA_TAG_SOBADISGOOD{"Sb"};
+const std::string EXTRA_TAG_DUET{"Dt"};
+const std::string EXTRA_TAG_COVER{"Cv"};
+const std::string EXTRA_TAG_NAME{"Na"};
+const std::string EXTRA_TAG_CITY{"Cy"};
+const std::string EXTRA_TAG_NONE{"None"};
 
 #endif /* __RESSOURCES_HPP__ */

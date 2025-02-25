@@ -8,6 +8,7 @@
 #include <wx/wx.h>
 #endif
 
+#include <wx/app.h>
 #include <wx/grid.h>
 #include <wx/splitter.h>
 #include <wx/treectrl.h>
@@ -24,7 +25,7 @@ using TagAndValue = std::pair<std::string, std::string>;
 
 class MainFrame : public wxFrame {
   public:
-    MainFrame(const wxString &title);
+    MainFrame(const wxString &title, const std::string &path);
 
   private:
     std::unique_ptr<wxSplitterWindow> m_splitter;
@@ -46,6 +47,8 @@ class MainFrame : public wxFrame {
     std::unique_ptr<wxButton> m_buttonPrepare;
 
     std::vector<TagAndValue> TagsChanged{};
+
+    std::string startPath{};
 
     /**
      * @brief Prepares the screen from start to splitter and panels (left + right) construction
@@ -71,6 +74,7 @@ class MainFrame : public wxFrame {
     bool UpdateTags();
     bool PrepareTags();
     std::string removeSpecialCharacters(const std::string &input);
+    int StringToInt(const std::string &str);
 };
 
 #endif /* __MAINFRAME_HPP__ */
