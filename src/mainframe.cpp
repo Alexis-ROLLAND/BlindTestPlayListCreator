@@ -124,7 +124,6 @@ std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'éc
 
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnMoveUp(wxCommandEvent &event) {
-    UNUSED(event);
 
     int sel = m_playList->GetSelection();
     if (sel > 0) {
@@ -133,10 +132,11 @@ void MainFrame::OnMoveUp(wxCommandEvent &event) {
         m_playList->Insert(item, sel - 1);
         m_playList->SetSelection(sel - 1);
     }
+
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnMoveDown(wxCommandEvent &event) {
-    UNUSED(event);
 
     int sel = m_playList->GetSelection();
     if (sel == wxNOT_FOUND) return; /** No item selected */
@@ -147,10 +147,10 @@ void MainFrame::OnMoveDown(wxCommandEvent &event) {
         m_playList->Insert(item, sel + 1);
         m_playList->SetSelection(sel + 1);
     }
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnDelete(wxCommandEvent &event) {
-    UNUSED(event);
 
     int sel = m_playList->GetSelection();
     if (sel == wxNOT_FOUND) return; /** No item selected */
@@ -160,10 +160,11 @@ void MainFrame::OnDelete(wxCommandEvent &event) {
         m_playList->SetSelection(sel);
     else if (m_playList->GetCount() > 0)
         m_playList->SetSelection(m_playList->GetCount() - 1);
+
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnGenerate(wxCommandEvent &event) {
-    UNUSED(event);
 
     int NbTitres = m_playList->GetCount();
     if (NbTitres < 1) return;
@@ -192,6 +193,7 @@ void MainFrame::OnGenerate(wxCommandEvent &event) {
             std::println(std::cerr, "Error Creating m3u file");
         }
     }
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
@@ -229,6 +231,7 @@ void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
     } else if (wxFileExists(path)) {
         m_playList->Append(path);
     }
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
@@ -243,6 +246,7 @@ void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
         m_grid->ClearGrid();
         m_grid->ForceRefresh();
     }
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
@@ -412,20 +416,21 @@ void MainFrame::OnGridCellChanged(wxGridEvent &event) {
     this->TagsChanged.push_back(std::make_pair(Tag, NewValue));
     // std::println(std::clog, "Tag = {} - New Value = {}", Tag, NewValue);
     m_buttonUpdate->Enable(true);
-    // event.Skip();    /** Usefull ? */
+    event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnUpdate(wxCommandEvent &event) {
-    UNUSED(event);
 
     this->UpdateTags();
     m_buttonUpdate->Enable(false);   // Désactiver le bouton
+    event.Skip();                    /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnPrepare(wxCommandEvent &event) {
-    UNUSED(event);
+
     this->PrepareTags();
     m_buttonPrepare->Enable(false);   // Désactiver le bouton
+    event.Skip();                     /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
 bool MainFrame::PrepareTags() {
