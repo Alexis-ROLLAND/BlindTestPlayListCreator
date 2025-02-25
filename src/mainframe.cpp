@@ -46,7 +46,7 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
     m_playList = new wxListBox(rightPanel.get(), wxID_ANY, wxDefaultPosition, wxDefaultSize); /** Create a ListBox */
     rightSizer->Add(m_playList, 1, wxEXPAND | wxALL, 10);                                     // La liste occupe tout l'espace restant
 
-    // Ajouter les boutons dans leur propre sizer
+    // Créer les boutons et les ajouter dans leur propre sizer
     wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     m_buttonUp = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_MONTER));
     m_buttonDown = std::make_unique<wxButton>(rightPanel.get(), wxID_ANY, wxString::FromUTF8(BUTTON_LABEL_DESCENDRE));
@@ -178,7 +178,7 @@ void MainFrame::OnGenerate(wxCommandEvent &event) {
 
         m3uPlaylist pl{fileName, fileDir};
 
-        std::println(std::clog, "File Name = {}", pl.getFileName());
+        // std::println(std::clog, "File Name = {}", pl.getFileName());
 
         for (int i = 0; i < NbTitres; ++i) {
             wxString chaine = m_playList->GetString(i);

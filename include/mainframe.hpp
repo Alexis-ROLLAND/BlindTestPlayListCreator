@@ -25,19 +25,26 @@ using TagAndValue = std::pair<std::string, std::string>;
 
 class MainFrame : public wxFrame {
   public:
+    /**
+     * @brief Construct a new Main Frame object
+     *
+     * @param title : Window Title
+     * @param path  : path to the "root" directory (music files)
+     */
     MainFrame(const wxString &title, const std::string &path);
 
   private:
-    std::unique_ptr<wxSplitterWindow> m_splitter;
+    std::unique_ptr<wxSplitterWindow> m_splitter; /**< Main splitter windows */
 
-    wxTreeCtrl *m_fileTree;
-    wxGrid *m_grid;
+    wxTreeCtrl *m_fileTree; /**< File tree   */
+    wxGrid *m_grid;         /**< Tags & values grid  */
 
-    wxListBox *m_playList;
+    wxListBox *m_playList; /**< Playlist list */
 
-    std::unique_ptr<wxPanel> leftPanel;
-    std::unique_ptr<wxPanel> rightPanel;
+    std::unique_ptr<wxPanel> leftPanel;  /**< left side panel */
+    std::unique_ptr<wxPanel> rightPanel; /**< right side panel */
 
+    /** Buttons */
     std::unique_ptr<wxButton> m_buttonUp;
     std::unique_ptr<wxButton> m_buttonDown;
     std::unique_ptr<wxButton> m_buttonDelete;
@@ -46,23 +53,22 @@ class MainFrame : public wxFrame {
     std::unique_ptr<wxButton> m_buttonUpdate;
     std::unique_ptr<wxButton> m_buttonPrepare;
 
-    std::vector<TagAndValue> TagsChanged{};
+    std::vector<TagAndValue> TagsChanged{}; /**< List of tags & values to update */
 
-    std::string startPath{};
+    std::string startPath{}; /**< root directory (music files) */
 
     /**
      * @brief Prepares the screen from start to splitter and panels (left + right) construction
      *
      * @return std::pair<int, int> : width and height of the display.
      */
-    std::pair<int, int> PrepareScreen();
+    [[nodiscard]] std::pair<int, int> PrepareScreen();
 
-    void OnTreeItemActivated(wxTreeEvent &event);
-    void OnTreeSelectionChanged(wxTreeEvent &event);
     void PopulateFileTree(const wxString &path, wxTreeItemId parentId);
-    wxString GetFullPath(wxTreeItemId itemId);
+    [[nodiscard]] wxString GetFullPath(wxTreeItemId itemId);
     void UpdateGridWithFileInfo(const wxString &filePath);
 
+    /** Event handlers */
     void OnMoveUp(wxCommandEvent &event);
     void OnMoveDown(wxCommandEvent &event);
     void OnDelete(wxCommandEvent &event);
@@ -70,11 +76,13 @@ class MainFrame : public wxFrame {
     void OnUpdate(wxCommandEvent &event);
     void OnPrepare(wxCommandEvent &event);
     void OnGridCellChanged(wxGridEvent &event);
+    void OnTreeItemActivated(wxTreeEvent &event);
+    void OnTreeSelectionChanged(wxTreeEvent &event);
 
     bool UpdateTags();
     bool PrepareTags();
-    std::string removeSpecialCharacters(const std::string &input);
-    int StringToInt(const std::string &str);
+    [[nodiscard]] std::string removeSpecialCharacters(const std::string &input);
+    [[nodiscard]] int StringToInt(const std::string &str);
 };
 
 #endif /* __MAINFRAME_HPP__ */
