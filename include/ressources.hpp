@@ -42,4 +42,6 @@ const std::string EXTRA_TAG_NAME{"Na"};
 const std::string EXTRA_TAG_CITY{"Cy"};
 const std::string EXTRA_TAG_NONE{"None"};
 
+const std::size_t DEFAULT_PLAYLIST_SIZE{15};
+
 #endif /* __RESSOURCES_HPP__ */

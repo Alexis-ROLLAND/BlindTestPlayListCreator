@@ -8,6 +8,15 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
 
     auto [width, height] = this->PrepareScreen();
 
+    /** Menu bar preparation */
+    menuBar = new wxMenuBar();
+
+    wxMenu *fileMenu = new wxMenu();
+    fileMenu->Append(wxID_EXIT, "Quitter");
+    menuBar->Append(fileMenu, "File");
+    SetMenuBar(menuBar);
+    Bind(wxEVT_MENU, &MainFrame::OnQuit, this, wxID_EXIT);
+
     /** ------------------  Left Side ------------------------*/
     wxBoxSizer *leftSizer = new wxBoxSizer(wxVERTICAL); /** Creating a (Box) Sizer */
 
@@ -90,6 +99,7 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
 
     m_fileTree->Bind(wxEVT_TREE_ITEM_ACTIVATED, &MainFrame::OnTreeItemActivated, this);
     m_fileTree->Bind(wxEVT_TREE_SEL_CHANGED, &MainFrame::OnTreeSelectionChanged, this);
+    m_fileTree->Bind(wxEVT_TREE_ITEM_MENU, &MainFrame::OnTreeItemMenu, this);
 
     // Lier les événements des boutons
     m_buttonUp->Bind(wxEVT_BUTTON, &MainFrame::OnMoveUp, this);
@@ -195,6 +205,36 @@ void MainFrame::OnGenerate(wxCommandEvent &event) {
     }
     event.Skip(); /** Do not propagate event to parent object */
 }
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnTreeItemMenu(wxTreeEvent &event) {
+    wxTreeItemId item = event.GetItem();
+    if (item.IsOk()) {
+        wxMenu contextMenu;
+        contextMenu.Append(ID_EXECUTE_ACTION, wxString::FromUTF8("Générer Playlist Aléatoire"));
+        contextMenu.Append(ID_EXECUTE_ACTION, wxString::FromUTF8("Ajouter titre aléatoire à la PlayList"));
+
+        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnExecuteAction, this, ID_EXECUTE_ACTION);
+        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnSecondAction, this, ID_SECOND_ACTION);
+
+        PopupMenu(&contextMenu, event.GetPoint());
+    }
+}
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnExecuteAction(wxCommandEvent &event) {
+    // Exécutez votre action ici
+    wxTreeItemId selectedItem = this->m_fileTree->GetSelection();
+
+    wxString itemPath = this->GetFullPath(selectedItem);
+
+    // Vérifier si c'est un répertoire ou un fichier
+    if (wxFileName::DirExists(itemPath)) {
+    }
+
+    event.Skip();
+}
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnSecondAction(wxCommandEvent &event) { event.Skip(); }
+
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
 
@@ -432,6 +472,12 @@ void MainFrame::OnPrepare(wxCommandEvent &event) {
     m_buttonPrepare->Enable(false);   // Désactiver le bouton
     event.Skip();                     /** Do not propagate event to parent object */
 }
+/**------------------------------------------------------------------------------------------------*/
+void MainFrame::OnQuit(wxCommandEvent &event) {
+    UNUSED(event);
+    Close(true);
+};
+
 /**------------------------------------------------------------------------------------------------*/
 bool MainFrame::PrepareTags() {
     wxTreeItemId itemId = m_fileTree->GetFocusedItem();

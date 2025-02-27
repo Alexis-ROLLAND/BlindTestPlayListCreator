@@ -23,6 +23,9 @@
 
 using TagAndValue = std::pair<std::string, std::string>;
 
+const int ID_EXECUTE_ACTION{wxNewId()};
+const int ID_SECOND_ACTION = wxNewId();
+
 class MainFrame : public wxFrame {
   public:
     /**
@@ -35,6 +38,8 @@ class MainFrame : public wxFrame {
 
   private:
     std::unique_ptr<wxSplitterWindow> m_splitter; /**< Main splitter windows */
+
+    wxMenuBar *menuBar; /**< Menu bar */
 
     wxTreeCtrl *m_fileTree; /**< File tree   */
     wxGrid *m_grid;         /**< Tags & values grid  */
@@ -78,6 +83,10 @@ class MainFrame : public wxFrame {
     void OnGridCellChanged(wxGridEvent &event);
     void OnTreeItemActivated(wxTreeEvent &event);
     void OnTreeSelectionChanged(wxTreeEvent &event);
+    void OnTreeItemMenu(wxTreeEvent &event);
+    void OnQuit(wxCommandEvent &event);
+    void OnExecuteAction(wxCommandEvent &event);
+    void OnSecondAction(wxCommandEvent &event);
 
     bool UpdateTags();
     bool PrepareTags();
