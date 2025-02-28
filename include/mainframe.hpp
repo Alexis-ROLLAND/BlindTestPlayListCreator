@@ -15,6 +15,7 @@
 #include <wx/wx.h>
 
 #include <memory>
+#include <random>
 
 #include "ressources.hpp"
 
@@ -23,8 +24,8 @@
 
 using TagAndValue = std::pair<std::string, std::string>;
 
-const int ID_EXECUTE_ACTION{wxNewId()};
-const int ID_SECOND_ACTION = wxNewId();
+const int ID_GENERATE_RANDOM_PLAYLIST_ACTION{wxNewId()};
+const int ID_ADD_RANDOM_TITLE_ACTION = wxNewId();
 
 class MainFrame : public wxFrame {
   public:
@@ -86,13 +87,14 @@ class MainFrame : public wxFrame {
     void OnTreeSelectionChanged(wxTreeEvent &event);
     void OnTreeItemMenu(wxTreeEvent &event);
     void OnQuit(wxCommandEvent &event);
-    void OnExecuteAction(wxCommandEvent &event);
-    void OnSecondAction(wxCommandEvent &event);
+    void OnGenerateRandomPlaylistAction(wxCommandEvent &event);
+    void OnAddRandomTitleAction(wxCommandEvent &event);
 
     bool UpdateTags();
     bool PrepareTags();
     [[nodiscard]] std::string removeSpecialCharacters(const std::string &input);
     [[nodiscard]] int StringToInt(const std::string &str);
+    [[nodiscard]] int generateRandomNumber(int max);
 };
 
 #endif /* __MAINFRAME_HPP__ */

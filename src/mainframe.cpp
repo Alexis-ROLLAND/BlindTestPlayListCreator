@@ -212,30 +212,48 @@ void MainFrame::OnTreeItemMenu(wxTreeEvent &event) {
     wxTreeItemId item = event.GetItem();
     if (item.IsOk()) {
         wxMenu contextMenu;
-        contextMenu.Append(ID_EXECUTE_ACTION, wxString::FromUTF8("Générer Playlist Aléatoire"));
-        contextMenu.Append(ID_EXECUTE_ACTION, wxString::FromUTF8("Ajouter titre aléatoire à la PlayList"));
+        contextMenu.Append(ID_GENERATE_RANDOM_PLAYLIST_ACTION, wxString::FromUTF8("Générer Playlist Aléatoire"));
+        contextMenu.Append(ID_ADD_RANDOM_TITLE_ACTION, wxString::FromUTF8("Ajouter titre aléatoire à la PlayList"));
 
-        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnExecuteAction, this, ID_EXECUTE_ACTION);
-        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnSecondAction, this, ID_SECOND_ACTION);
+        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnGenerateRandomPlaylistAction, this, ID_GENERATE_RANDOM_PLAYLIST_ACTION);
+        contextMenu.Bind(wxEVT_MENU, &MainFrame::OnAddRandomTitleAction, this, ID_ADD_RANDOM_TITLE_ACTION);
 
         PopupMenu(&contextMenu, event.GetPoint());
     }
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnExecuteAction(wxCommandEvent &event) {
-    // Exécutez votre action ici
-    wxTreeItemId selectedItem = this->m_fileTree->GetSelection();
-
-    wxString itemPath = this->GetFullPath(selectedItem);
+void MainFrame::OnGenerateRandomPlaylistAction(wxCommandEvent &event) {
+    wxString itemPath = this->GetFullPath(this->m_fileTree->GetSelection());
 
     // Vérifier si c'est un répertoire ou un fichier
     if (wxFileName::DirExists(itemPath)) {
+        /** Do the job :)  */
+    } else {
+        wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
     }
-
     event.Skip();
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnSecondAction(wxCommandEvent &event) { event.Skip(); }
+void MainFrame::OnAddRandomTitleAction(wxCommandEvent &event) {
+    wxString itemPath = this->GetFullPath(this->m_fileTree->GetSelection());
+    wxArrayString files;
+
+    // Vérifier si c'est un répertoire ou un fichier
+    if (wxFileName::DirExists(itemPath)) {
+        wxDir::GetAllFiles(itemPath, &files, "*.mp3", wxDIR_FILES);
+        // Affiche les fichiers trouvés
+        for (const auto &file : files) {
+            std::println("-> {}", std::string(file.ToUTF8()));
+        }
+        size_t NbFiles = files.GetCount();
+        std::println("Nombre de fichiers dans le dossier : {}", NbFiles);
+        int idSelectedFile = this->generateRandomNumber(NbFiles - 1);
+        m_playList->Append(files.Item((idSelectedFile)));
+    } else {
+        wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
+    }
+    event.Skip();
+}
 
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
@@ -604,5 +622,12 @@ int MainFrame::StringToInt(const std::string &str) {
     } else {
         return BAD_YEAR_VALUE;
     }
+}
+/**------------------------------------------------------------------------------------------------*/
+int MainFrame::generateRandomNumber(int max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, max);
+    return distrib(gen);
 }
 /**------------------------------------------------------------------------------------------------*/
