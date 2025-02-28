@@ -110,6 +110,8 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
     m_buttonPrepare->Bind(wxEVT_BUTTON, &MainFrame::OnPrepare, this);
 }
 /**------------------------------------------------------------------------------------------------*/
+
+/**------------------------------------------------------------------------------------------------*/
 std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'écran principal
     wxDisplay display{};
     wxRect screenRect = display.GetClientArea();

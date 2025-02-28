@@ -35,6 +35,7 @@ class MainFrame : public wxFrame {
      * @param path  : path to the "root" directory (music files)
      */
     MainFrame(const wxString &title, const std::string &path);
+    virtual ~MainFrame() = default;
 
   private:
     std::unique_ptr<wxSplitterWindow> m_splitter; /**< Main splitter windows */
