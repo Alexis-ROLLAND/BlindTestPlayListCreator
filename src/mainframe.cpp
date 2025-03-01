@@ -224,10 +224,23 @@ void MainFrame::OnTreeItemMenu(wxTreeEvent &event) {
 /**------------------------------------------------------------------------------------------------*/
 void MainFrame::OnGenerateRandomPlaylistAction(wxCommandEvent &event) {
     wxString itemPath = this->GetFullPath(this->m_fileTree->GetSelection());
+    wxArrayString files;
 
     // Vérifier si c'est un répertoire ou un fichier
     if (wxFileName::DirExists(itemPath)) {
-        /** Do the job :)  */
+        this->m_playList->Clear();
+        wxDir::GetAllFiles(itemPath, &files, "*.mp3", wxDIR_FILES);
+        std::size_t NbFiles = files.GetCount();
+        int NbTitlesToAdd = (NbFiles < DEFAULT_PLAYLIST_SIZE) ? NbFiles : DEFAULT_PLAYLIST_SIZE;
+        // std::println(std::clog, "Files to add : {}", NbTitlesToAdd);
+        std::vector<int> tabIndex(NbFiles);
+        std::iota(tabIndex.begin(), tabIndex.end(), 0);
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(tabIndex.begin(), tabIndex.end(), g);
+        for (int i = 0; i < NbTitlesToAdd; ++i)
+            m_playList->Append(files.Item((tabIndex.at(i))));
+
     } else {
         wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
     }
@@ -240,14 +253,17 @@ void MainFrame::OnAddRandomTitleAction(wxCommandEvent &event) {
 
     // Vérifier si c'est un répertoire ou un fichier
     if (wxFileName::DirExists(itemPath)) {
+
         wxDir::GetAllFiles(itemPath, &files, "*.mp3", wxDIR_FILES);
+        /**
         // Affiche les fichiers trouvés
         for (const auto &file : files) {
             std::println("-> {}", std::string(file.ToUTF8()));
         }
-        size_t NbFiles = files.GetCount();
-        std::println("Nombre de fichiers dans le dossier : {}", NbFiles);
-        int idSelectedFile = this->generateRandomNumber(NbFiles - 1);
+        */
+
+        int idSelectedFile = this->generateRandomNumber(files.GetCount() - 1);
+        // std::println("Nombre de fichiers dans le dossier : {}", NbFiles);
         m_playList->Append(files.Item((idSelectedFile)));
     } else {
         wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
