@@ -38,7 +38,7 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 find_package(ZLIB)
 find_package(TagLib 2.0.0 REQUIRED)
-find_package(wxWidgets 3.2 COMPONENTS core base REQUIRED CONFIG) # Request the required wxWidgets libs for GUI version
+find_package(wxWidgets 3.3 COMPONENTS core base REQUIRED CONFIG) # Request the required wxWidgets libs for GUI version
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
