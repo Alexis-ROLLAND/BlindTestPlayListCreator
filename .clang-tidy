@@ -1,5 +1,10 @@
-Checks: '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm-*'
-WarningsAsErrors: ''
-HeaderFilterRegex: '^((?!\/usr\/include).)*$'
-SystemHeaders: false
-FormatStyle: none
+Checks: '-*,modernize-*,readability-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay'
+CheckOptions:
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+  - key: LanguageVersion
+    value: c++23
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*' # Appliquer clang-tidy uniquement aux fichiers pertinents (peut être ajusté)

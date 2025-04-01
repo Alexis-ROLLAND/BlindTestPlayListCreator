@@ -1,8 +1,25 @@
 ---
 BasedOnStyle: LLVM
 IndentWidth: 4
-ColumnLimit: 180
+ColumnLimit: 120 # Réduction pour améliorer la lisibilité sur tous les écrans.
 UseTab: Never
+
+# Gestion des instructions courtes et espaces autour des parenthèses.
 AllowShortIfStatementsOnASingleLine: true
+SpaceBeforeParens: ControlStatements
+
+# Alignement et espacement.
 AlignTrailingComments: true
 SpacesBeforeTrailingComments: 3
+
+# Style des accolades et gestion des listes longues.
+BreakBeforeBraces: Allman # Style Allman (accolades sur une nouvelle ligne).
+BinPackArguments: false # Chaque argument sur sa propre ligne.
+BinPackParameters: false # Chaque paramètre sur sa propre ligne.
+
+# Gestion des namespaces et modificateurs d'accès.
+NamespaceIndentation: None # Pas d'indentation supplémentaire pour les namespaces.
+AccessModifierOffset: -2 # Aligner les modificateurs d'accès avec le contenu.
+
+# Limitation des lignes vides.
+MaxEmptyLinesToKeep: 1 # Limiter les lignes vides entre blocs ou macros.
