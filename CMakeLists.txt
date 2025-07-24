@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.15)		# never set less 3.12 min version
 project(btPlaylistCreator)
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "Ccache détecté : ${CCACHE_PROGRAM}")
+else()
+    message(STATUS "Ccache non trouvé")
+endif()
+
+
 set(CMAKE_CXX_STANDARD 23)  # We're using C++23 standard :)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Désactiver les extensions spécifiques au compilateur
