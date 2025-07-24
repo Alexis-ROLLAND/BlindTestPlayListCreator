@@ -13,7 +13,7 @@ AlignTrailingComments: true
 SpacesBeforeTrailingComments: 3
 
 # Style des accolades et gestion des listes longues.
-BreakBeforeBraces: Allman # Style Allman (accolades sur une nouvelle ligne).
+BreakBeforeBraces: Attach  # 
 BinPackArguments: false # Chaque argument sur sa propre ligne.
 BinPackParameters: false # Chaque paramètre sur sa propre ligne.
 

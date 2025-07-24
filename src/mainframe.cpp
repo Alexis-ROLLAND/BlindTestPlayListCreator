@@ -4,8 +4,7 @@
 #include <wx/filename.h>
 #include <wx/stattext.h>
 
-MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(NULL, wxID_ANY, title), startPath{path}
-{
+MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(NULL, wxID_ANY, title), startPath{path} {
 
     auto [width, height] = this->PrepareScreen();
 
@@ -88,8 +87,7 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
     wxString rootDir = wxString::FromUTF8(this->startPath);
 
     // Vérifier si le répertoire existe
-    if (!wxDir::Exists(rootDir))
-    {
+    if (!wxDir::Exists(rootDir)) {
         wxMessageBox(wxString::FromUTF8("Le répertoire spécifié n'existe pas : ") + rootDir,
                      wxString::FromUTF8("Erreur"),
                      wxOK | wxICON_ERROR);
@@ -117,8 +115,7 @@ MainFrame::MainFrame(const wxString &title, const std::string &path) : wxFrame(N
 /**------------------------------------------------------------------------------------------------*/
 
 /**------------------------------------------------------------------------------------------------*/
-std::pair<int, int> MainFrame::PrepareScreen()
-{   // Obtenir la taille de l'écran principal
+std::pair<int, int> MainFrame::PrepareScreen() {   // Obtenir la taille de l'écran principal
     wxDisplay display{};
     wxRect screenRect = display.GetClientArea();
 
@@ -143,12 +140,10 @@ std::pair<int, int> MainFrame::PrepareScreen()
 }
 
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnMoveUp(wxCommandEvent &event)
-{
+void MainFrame::OnMoveUp(wxCommandEvent &event) {
 
     int sel = m_playList->GetSelection();
-    if (sel > 0)
-    {
+    if (sel > 0) {
         wxString item = m_playList->GetString(sel);
         m_playList->Delete(sel);
         m_playList->Insert(item, sel - 1);
@@ -158,14 +153,12 @@ void MainFrame::OnMoveUp(wxCommandEvent &event)
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnMoveDown(wxCommandEvent &event)
-{
+void MainFrame::OnMoveDown(wxCommandEvent &event) {
 
     int sel = m_playList->GetSelection();
     if (sel == wxNOT_FOUND) return; /** No item selected */
 
-    if (static_cast<unsigned int>(sel) < m_playList->GetCount() - 1)
-    {
+    if (static_cast<unsigned int>(sel) < m_playList->GetCount() - 1) {
         wxString item = m_playList->GetString(sel);
         m_playList->Delete(sel);
         m_playList->Insert(item, sel + 1);
@@ -174,8 +167,7 @@ void MainFrame::OnMoveDown(wxCommandEvent &event)
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnDelete(wxCommandEvent &event)
-{
+void MainFrame::OnDelete(wxCommandEvent &event) {
 
     int sel = m_playList->GetSelection();
     if (sel == wxNOT_FOUND) return; /** No item selected */
@@ -189,16 +181,14 @@ void MainFrame::OnDelete(wxCommandEvent &event)
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnGenerate(wxCommandEvent &event)
-{
+void MainFrame::OnGenerate(wxCommandEvent &event) {
 
     int NbTitres = m_playList->GetCount();
     if (NbTitres < 1) return;
 
     wxFileDialog saveFileDialog(
         this, "Enregistrer le fichier", "", "", "Fichiers m3u (*.m3u)|*.m3u", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    if (saveFileDialog.ShowModal() == wxID_OK)
-    {
+    if (saveFileDialog.ShowModal() == wxID_OK) {
         wxString wxfileDir = saveFileDialog.GetDirectory();
         wxString wxfileName = saveFileDialog.GetFilename();
 
@@ -209,30 +199,24 @@ void MainFrame::OnGenerate(wxCommandEvent &event)
 
         // std::println(std::clog, "File Name = {}", pl.getFileName());
 
-        for (int i = 0; i < NbTitres; ++i)
-        {
+        for (int i = 0; i < NbTitres; ++i) {
             wxString chaine = m_playList->GetString(i);
             std::string filepath = std::string(chaine.ToUTF8());
             pl.add(filepath);
         }
 
-        try
-        {
+        try {
             pl.generate();
-        }
-        catch (const std::ios::failure &e)
-        {
+        } catch (const std::ios::failure &e) {
             std::println(std::cerr, "Error Creating m3u file");
         }
     }
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnTreeItemMenu(wxTreeEvent &event)
-{
+void MainFrame::OnTreeItemMenu(wxTreeEvent &event) {
     wxTreeItemId item = event.GetItem();
-    if (item.IsOk())
-    {
+    if (item.IsOk()) {
         wxMenu contextMenu;
         contextMenu.Append(ID_GENERATE_RANDOM_PLAYLIST_ACTION, wxString::FromUTF8("Générer Playlist Aléatoire"));
         contextMenu.Append(ID_ADD_RANDOM_TITLE_ACTION, wxString::FromUTF8("Ajouter titre aléatoire à la PlayList"));
@@ -245,14 +229,12 @@ void MainFrame::OnTreeItemMenu(wxTreeEvent &event)
     }
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnGenerateRandomPlaylistAction(wxCommandEvent &event)
-{
+void MainFrame::OnGenerateRandomPlaylistAction(wxCommandEvent &event) {
     wxString itemPath = this->GetFullPath(this->m_fileTree->GetSelection());
     wxArrayString files;
 
     // Vérifier si c'est un répertoire ou un fichier
-    if (wxFileName::DirExists(itemPath))
-    {
+    if (wxFileName::DirExists(itemPath)) {
         this->m_playList->Clear();
         wxDir::GetAllFiles(itemPath, &files, "*.mp3", wxDIR_FILES);
         std::size_t NbFiles = files.GetCount();
@@ -265,22 +247,18 @@ void MainFrame::OnGenerateRandomPlaylistAction(wxCommandEvent &event)
         std::shuffle(tabIndex.begin(), tabIndex.end(), g);
         for (int i = 0; i < NbTitlesToAdd; ++i)
             m_playList->Append(files.Item((tabIndex.at(i))));
-    }
-    else
-    {
+    } else {
         wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
     }
     event.Skip();
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnAddRandomTitleAction(wxCommandEvent &event)
-{
+void MainFrame::OnAddRandomTitleAction(wxCommandEvent &event) {
     wxString itemPath = this->GetFullPath(this->m_fileTree->GetSelection());
     wxArrayString files;
 
     // Vérifier si c'est un répertoire ou un fichier
-    if (wxFileName::DirExists(itemPath))
-    {
+    if (wxFileName::DirExists(itemPath)) {
 
         wxDir::GetAllFiles(itemPath, &files, "*.mp3", wxDIR_FILES);
         /**
@@ -293,78 +271,59 @@ void MainFrame::OnAddRandomTitleAction(wxCommandEvent &event)
         int idSelectedFile = this->generateRandomNumber(files.GetCount() - 1);
         // std::println("Nombre de fichiers dans le dossier : {}", NbFiles);
         m_playList->Append(files.Item((idSelectedFile)));
-    }
-    else
-    {
+    } else {
         wxMessageBox(wxString::FromUTF8("L'élément sélectionné n'est pas un dossier."), wxString::FromUTF8("Erreur"));
     }
     event.Skip();
 }
 
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId)
-{
+void MainFrame::PopulateFileTree(const wxString &path, wxTreeItemId parentId) {
 
     wxDir dir(path);
     wxString filename;
 
-    if (dir.GetFirst(&filename))
-    {
-        do
-        {
+    if (dir.GetFirst(&filename)) {
+        do {
             wxString fullPath = path + wxFILE_SEP_PATH + filename;
             wxTreeItemId itemId;
 
-            if (wxDir::Exists(fullPath))
-            {
+            if (wxDir::Exists(fullPath)) {
                 itemId = m_fileTree->AppendItem(parentId, filename);
                 PopulateFileTree(fullPath, itemId);
-            }
-            else
-            {
+            } else {
                 m_fileTree->AppendItem(parentId, filename);
             }
         } while (dir.GetNext(&filename));
     }
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnTreeItemActivated(wxTreeEvent &event)
-{
+void MainFrame::OnTreeItemActivated(wxTreeEvent &event) {
     wxTreeItemId itemId = event.GetItem();
     wxString path = GetFullPath(itemId);
 
-    if (wxDir::Exists(path))
-    {
-        if (m_fileTree->IsExpanded(itemId))
-        {
+    if (wxDir::Exists(path)) {
+        if (m_fileTree->IsExpanded(itemId)) {
             m_fileTree->Collapse(itemId);
-        }
-        else
-        {
+        } else {
             m_fileTree->DeleteChildren(itemId);
             PopulateFileTree(path, itemId);
             m_fileTree->Expand(itemId);
         }
-    }
-    else if (wxFileExists(path))
-    {
+    } else if (wxFileExists(path)) {
         m_playList->Append(path);
     }
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event)
-{
+void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event) {
     wxTreeItemId itemId = event.GetItem();
     wxString path = GetFullPath(itemId);
     this->TagsChanged.clear();
 
-    if (wxFileExists(path))
-    {
+    if (wxFileExists(path)) {
         UpdateGridWithFileInfo(path);
-    }
-    else
-    {
+    } else {
         // Optionnel : effacer la grille si un dossier est sélectionné
         m_grid->ClearGrid();
         m_grid->ForceRefresh();
@@ -372,8 +331,7 @@ void MainFrame::OnTreeSelectionChanged(wxTreeEvent &event)
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
-{
+void MainFrame::UpdateGridWithFileInfo(const wxString &filePath) {
 
     if (!this->TagsChanged.empty()) this->TagsChanged.clear();
     //   Effacer le contenu actuel de la grille
@@ -385,20 +343,13 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
 
     std::string path = std::string(filePath.ToUTF8());
 
-    try
-    {
+    try {
         tagM = std::make_unique<tagManager>(path);
-    }
-    catch (const FileNotFoundException &e)
-    {
+    } catch (const FileNotFoundException &e) {
         return;
-    }
-    catch (const FileErrorException &e)
-    {
+    } catch (const FileErrorException &e) {
         return;
-    }
-    catch (const NoTagsInFileException &e)
-    {
+    } catch (const NoTagsInFileException &e) {
         return;
     }
 
@@ -407,62 +358,47 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
     int currRow{0};
     std::string tagValue{};
     /** TITLE tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagValue = this->removeSpecialCharacters(tagM->getTitre(false));
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_TITRE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** ARTIST tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagValue = this->removeSpecialCharacters(tagM->getInterprete(false));
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_ARTIST));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** DATE tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             int Date = tagM->getDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_DATE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** LANGUAGE tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagManager::btLanguage Langue = tagM->getLangue(false);
-            switch (Langue)
-            {
+            switch (Langue) {
             case tagManager::btLanguage::FRA:
                 tagValue = "FRA";
                 break;
@@ -477,17 +413,13 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_LANGUAGE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** EXTRA tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagValue.clear();
             if (tagM->isMovieSoundTrack(false)) tagValue += EXTRA_TAG_MOVIE;
             if (tagM->isTvShow(false)) tagValue += EXTRA_TAG_TV;
@@ -504,58 +436,44 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** EXTRA TITLE tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraTitle(false));
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_TITLE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** EXTRA ARTIST tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             tagValue = this->removeSpecialCharacters(tagM->getExtraArtist(false));
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_ARTIST));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
 
     /** EXTRA DATE tag */
-    if (tagM)
-    {
-        try
-        {
+    if (tagM) {
+        try {
             int Date = tagM->getExtraDate(false);
             tagValue = std::to_string(Date);
             m_grid->AppendRows(1);
             m_grid->SetRowLabelValue(currRow, wxString::FromUTF8(ROW_LABEL_VALUE_EXTRA_DATE));
             m_grid->SetCellValue(currRow, 0, wxString::FromUTF8(tagValue));
             currRow++;
-        }
-        catch (const TagNotInTheFileException &e)
-        {
+        } catch (const TagNotInTheFileException &e) {
         }
     }
     // Redimensionner les colonnes pour s'adapter au contenu
@@ -565,8 +483,7 @@ void MainFrame::UpdateGridWithFileInfo(const wxString &filePath)
     m_grid->ForceRefresh();
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnGridCellChanged(wxGridEvent &event)
-{
+void MainFrame::OnGridCellChanged(wxGridEvent &event) {
     int row = event.GetRow();
     std::string Tag{m_grid->GetRowLabelValue(row).utf8_str()};
     std::string NewValue{m_grid->GetCellValue(row, 0).utf8_str()};
@@ -576,31 +493,27 @@ void MainFrame::OnGridCellChanged(wxGridEvent &event)
     event.Skip(); /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnUpdate(wxCommandEvent &event)
-{
+void MainFrame::OnUpdate(wxCommandEvent &event) {
 
     this->UpdateTags();
     m_buttonUpdate->Enable(false);   // Désactiver le bouton
     event.Skip();                    /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnPrepare(wxCommandEvent &event)
-{
+void MainFrame::OnPrepare(wxCommandEvent &event) {
 
     this->PrepareTags();
     m_buttonPrepare->Enable(false);   // Désactiver le bouton
     event.Skip();                     /** Do not propagate event to parent object */
 }
 /**------------------------------------------------------------------------------------------------*/
-void MainFrame::OnQuit(wxCommandEvent &event)
-{
+void MainFrame::OnQuit(wxCommandEvent &event) {
     UNUSED(event);
     Close(true);
 };
 
 /**------------------------------------------------------------------------------------------------*/
-bool MainFrame::PrepareTags()
-{
+bool MainFrame::PrepareTags() {
     wxTreeItemId itemId = m_fileTree->GetFocusedItem();
     wxString tree_path = GetFullPath(itemId);
 
@@ -610,25 +523,17 @@ bool MainFrame::PrepareTags()
 
     // std::println(std::clog, "File to update : {}", path);
 
-    try
-    {
+    try {
         tagM = std::make_unique<tagManager>(path);
-    }
-    catch (const FileNotFoundException &e)
-    {
+    } catch (const FileNotFoundException &e) {
         return false;
-    }
-    catch (const FileErrorException &e)
-    {
+    } catch (const FileErrorException &e) {
         return false;
-    }
-    catch (const NoTagsInFileException &e)
-    {
+    } catch (const NoTagsInFileException &e) {
         return false;
     }
 
-    if (tagM)
-    {
+    if (tagM) {
         tagM->prepareFile(true);
         this->UpdateGridWithFileInfo(tree_path);
         return true;
@@ -636,8 +541,7 @@ bool MainFrame::PrepareTags()
     return false;
 }
 /**------------------------------------------------------------------------------------------------*/
-bool MainFrame::UpdateTags()
-{
+bool MainFrame::UpdateTags() {
     if (this->TagsChanged.empty()) return false;
 
     wxTreeItemId itemId = m_fileTree->GetFocusedItem();
@@ -649,27 +553,19 @@ bool MainFrame::UpdateTags()
 
     // std::println(std::clog, "File to update : {}", path);
 
-    try
-    {
+    try {
         tagM = std::make_unique<tagManager>(path);
-    }
-    catch (const FileNotFoundException &e)
-    {
+    } catch (const FileNotFoundException &e) {
         return false;
-    }
-    catch (const FileErrorException &e)
-    {
+    } catch (const FileErrorException &e) {
         return false;
-    }
-    catch (const NoTagsInFileException &e)
-    {
+    } catch (const NoTagsInFileException &e) {
         return false;
     }
 
     if (!tagM) return false;
 
-    for (auto item : this->TagsChanged)
-    {
+    for (auto item : this->TagsChanged) {
         // std::println(std::clog, "Tag = {} - New Value = {}", item.first, item.second);
         if (item.first == ROW_LABEL_VALUE_TITRE)
             tagM->setTitre(item.second);
@@ -679,18 +575,13 @@ bool MainFrame::UpdateTags()
             tagM->setExtraTitle(item.second);
         else if (item.first == ROW_LABEL_VALUE_EXTRA_ARTIST)
             tagM->setExtraArtist(item.second);
-        else if (item.first == ROW_LABEL_VALUE_DATE)
-        {
+        else if (item.first == ROW_LABEL_VALUE_DATE) {
             int date = this->StringToInt(item.second);
             tagM->setDate(date);
-        }
-        else if (item.first == ROW_LABEL_VALUE_EXTRA_DATE)
-        {
+        } else if (item.first == ROW_LABEL_VALUE_EXTRA_DATE) {
             int date = this->StringToInt(item.second);
             tagM->setExtraDate(date);
-        }
-        else if (item.first == ROW_LABEL_VALUE_EXTRA)
-        {
+        } else if (item.first == ROW_LABEL_VALUE_EXTRA) {
             std::string str = item.second;
             tagM->setMovieSoundTrackFlag(str.contains(EXTRA_TAG_MOVIE));
             tagM->setTvShowFlag(str.contains(EXTRA_TAG_TV));
@@ -700,9 +591,7 @@ bool MainFrame::UpdateTags()
             tagM->setCoverFlag(str.contains(EXTRA_TAG_COVER));
             tagM->setNameFlag(str.contains(EXTRA_TAG_NAME));
             tagM->setCityFlag(str.contains(EXTRA_TAG_CITY));
-        }
-        else if (item.first == ROW_LABEL_VALUE_LANGUAGE)
-        {
+        } else if (item.first == ROW_LABEL_VALUE_LANGUAGE) {
             std::string str = item.second;
             if (str == "FRA")
                 tagM->setLangue(tagManager::btLanguage::FRA);
@@ -716,49 +605,40 @@ bool MainFrame::UpdateTags()
 }
 
 /**------------------------------------------------------------------------------------------------*/
-wxString MainFrame::GetFullPath(wxTreeItemId itemId)
-{
+wxString MainFrame::GetFullPath(wxTreeItemId itemId) {
     wxString path = m_fileTree->GetItemText(itemId);
     wxTreeItemId parent = m_fileTree->GetItemParent(itemId);
 
-    while (parent.IsOk() && parent != m_fileTree->GetRootItem())
-    {
+    while (parent.IsOk() && parent != m_fileTree->GetRootItem()) {
         path = m_fileTree->GetItemText(parent) + wxFILE_SEP_PATH + path;
         parent = m_fileTree->GetItemParent(parent);
     }
 
-    if (parent == m_fileTree->GetRootItem())
-    {
+    if (parent == m_fileTree->GetRootItem()) {
         path = m_fileTree->GetItemText(parent) + wxFILE_SEP_PATH + path;
     }
 
     return path;
 }
 /**------------------------------------------------------------------------------------------------*/
-std::string MainFrame::removeSpecialCharacters(const std::string &input)
-{
+std::string MainFrame::removeSpecialCharacters(const std::string &input) {
     std::string result = input;
     std::replace_if(result.begin(), result.end(), [](unsigned char c) { return c > 127; }, '_');
     return result;
 }
 /**------------------------------------------------------------------------------------------------*/
-int MainFrame::StringToInt(const std::string &str)
-{
+int MainFrame::StringToInt(const std::string &str) {
     int result = 0;
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
 
-    if (ec == std::errc() && ptr == str.data() + str.size())
-    {
+    if (ec == std::errc() && ptr == str.data() + str.size()) {
         return result;
-    }
-    else
-    {
+    } else {
         return BAD_YEAR_VALUE;
     }
 }
 /**------------------------------------------------------------------------------------------------*/
-int MainFrame::generateRandomNumber(int max)
-{
+int MainFrame::generateRandomNumber(int max) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, max);

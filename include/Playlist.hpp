@@ -13,28 +13,51 @@
  */
 class Playlist {
   private:
-    std::string Name{};
+    std::string Name{}; /**< Playlist Name  */
 
   protected:
-    std::vector<std::string> FileList{};
+    std::vector<std::string> FileList{}; /**< List of files into the playlist */
 
   public:
-    Playlist() = delete;
-    virtual ~Playlist() = default;
+    Playlist() = delete;           /**< No default Ctor */
+    virtual ~Playlist() = default; /**< Defaulted Dtor */
 
+    /**
+     * @brief Construct a new Playlist object
+     *
+     * @param _Name
+     */
     Playlist(const std::string &_Name) : Name{_Name} {};
 
+    /**
+     * @brief   Name property getter
+     *
+     */
     [[nodiscard]] std::string getName() noexcept { return this->Name; };
 
+    /**
+     * @brief Adds a file to the playlist
+     *
+     * @param file
+     */
     void add(const std::string &file) noexcept { this->FileList.push_back(file); };
 
+    /**
+     * @brief
+     *
+     */
     void dump() noexcept;
 
     virtual void generate() = 0;
 };
 
+//-----------------------------------------------------------------------------
 const std::string defaultExt{"m3u"};
 
+/**
+ * @brief
+ *
+ */
 class m3uPlaylist : public Playlist {
   private:
     const std::string ext{defaultExt};
