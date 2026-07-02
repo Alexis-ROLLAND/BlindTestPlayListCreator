@@ -11,7 +11,7 @@ else()
 endif()
 
 
-set(CMAKE_CXX_STANDARD 23)  # We're using C++23 standard :)
+set(CMAKE_CXX_STANDARD 26)  # We're using C++26 standard :)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Désactiver les extensions spécifiques au compilateur
 set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
